@@ -44,6 +44,7 @@ Public Sub ListAllSCEntriesInAllCharts()
     Dim wkb As Workbook
     Dim wksSeriesLegend As Worksheet
     Dim arrData As Variant
+    Dim bAreSCsFound As Boolean
     Dim bNewSeriesSheet As Boolean
     
     
@@ -57,32 +58,36 @@ Public Sub ListAllSCEntriesInAllCharts()
     Call CollectAllHiddenStuffOnSheets(wkb)
     Call MakeAllStuffVisibleHidden(wkb, False)
     
-    arrData = CollectSCData(wkb)
+    bAreSCsFound = CollectSCData(wkb, arrData)
     
     'store if the sheet was newly added/created
     bNewSeriesSheet = WasSeriesEntriesInChartsWorksheetCreatedAndInitialized(wkb)
     Set wksSeriesLegend = wkb.Worksheets(gcsLegendSheetName)
     
     Call PasteDataToCollectionSheet(wksSeriesLegend, arrData)
-    Call MarkEachOddChartNumber(wksSeriesLegend)
     
-    Call MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible(wkb, arrData, False)
-    Call MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible(wkb, arrData, True)
-    Call MarkSeriesDataIfSourceIsHidden(wkb, arrData)
+    If bAreSCsFound Then
+        Call MarkEachOddChartNumber(wksSeriesLegend)
+        
+        Call MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible(wkb, arrData, False)
+        Call MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible(wkb, arrData, True)
+        Call MarkSeriesDataIfSourceIsHidden(wkb, arrData)
+    End If
     
     Call MakeAllStuffVisibleHidden(wkb, True)
     
-    Call AddHyperlinksToChartName(wksSeriesLegend)
-    Call AddButtonsThatHyperlinkToCharts(wksSeriesLegend)
-    Call AddHyperlinksToSeriesData(wksSeriesLegend)
-    
-    Call MarkSeriesNameIfXYValuesAreOnDifferentSheets(wksSeriesLegend, arrData)
-    Call MarkYValuesIfRowsOrColsDoNotCorrespond(wksSeriesLegend, arrData)
-    
-    Call ApplyExtensions(wksSeriesLegend, bNewSeriesSheet, arrData)
-    
-    '''stuff that has to be done last
-    Call StuffToBeDoneLast(wksSeriesLegend, bNewSeriesSheet)
+    If bAreSCsFound Then
+        Call AddHyperlinksToChartName(wksSeriesLegend)
+        Call AddButtonsThatHyperlinkToCharts(wksSeriesLegend)
+        Call AddHyperlinksToSeriesData(wksSeriesLegend)
+        
+        Call MarkSeriesNameIfXYValuesAreOnDifferentSheets(wksSeriesLegend, arrData)
+        Call MarkYValuesIfRowsOrColsDoNotCorrespond(wksSeriesLegend, arrData)
+        
+        Call ApplyExtensions(wksSeriesLegend, bNewSeriesSheet, arrData)
+        
+        Call StuffToBeDoneLast(wksSeriesLegend, bNewSeriesSheet)
+    End If
     
     Application.StatusBar = False
     
@@ -335,8 +340,9 @@ End Sub
 '==============================================================================
 
 Private Function CollectSCData( _
-    ByVal wkb As Workbook _
-        ) As Variant
+    ByVal wkb As Workbook, _
+    ByRef arrData As Variant _
+        ) As Boolean
     
     Dim cha As Chart
     Dim crt As ChartObject
@@ -345,10 +351,17 @@ Private Function CollectSCData( _
     Dim j As Long
     Dim k As Long     'counts the charts
     Dim arrHeading As Variant
-    Dim arrData As Variant
     
+    
+    'Set the default return value
+    CollectSCData = False
     
     NoOfAllSCsInAllChartsInWorkbook = CountSCsInAllChartsInWorkbook(wkb)
+    If NoOfAllSCsInAllChartsInWorkbook = 0 Then
+        MsgBox ("There are no Charts (with readable SeriesCollections) in " & _
+                "this Workbook.")
+        Exit Function
+    End If
     
     'declare bounds of array
         'for that the number of columns is needed which can be extracted from
@@ -376,7 +389,7 @@ Private Function CollectSCData( _
         Next
     End With
     
-    CollectSCData = arrData
+    CollectSCData = True
 
 End Function
 
@@ -425,6 +438,8 @@ Private Sub PasteDataToCollectionSheet( _
         
         Set rng = .Cells(gciTitleRow + 1, 1)
     End With
+    
+    If Not IsArray(arrData) Then Exit Sub
     
     With rng
         'paste (needed/wanted) array to target range
