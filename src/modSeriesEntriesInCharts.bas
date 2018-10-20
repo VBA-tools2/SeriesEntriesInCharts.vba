@@ -703,7 +703,7 @@ On Error GoTo 0
     With rng.Font
         .ColorIndex = xlColorIndexAutomatic
         .Underline = xlUnderlineStyleNone
-'        .Size = wks.Cells(2, l).Font.Size
+        .Size = wks.Cells(gciTitleRow + 1, 1).Font.Size
     End With
     
 End Sub
