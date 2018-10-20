@@ -434,7 +434,7 @@ Private Sub PasteDataToCollectionSheet( _
     
     With wks
         'first clear all entries
-        .UsedRange.Offset(gciTitleRow).Clear
+        .UsedRange.Offset(gciTitleRow).EntireRow.Delete Shift:=xlShiftUp
         
         Set rng = .Cells(gciTitleRow + 1, 1)
     End With
