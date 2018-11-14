@@ -95,9 +95,9 @@ Private Function CollectSCData( _
     Dim cha As Chart
     Dim crt As ChartObject
     Dim NoOfAllSCsInAllChartsInWorkbook As Long
-    Dim i As Long
-    Dim j As Long
-    Dim k As Long     'counts the charts
+    Dim iSheetIndex As Long
+    Dim iSCTotal As Long
+    Dim iChartNumber As Long
     Dim arrHeading As Variant
     
     
@@ -121,17 +121,31 @@ Private Function CollectSCData( _
     
     With wkb
         'fill the array
-        j = 1
-        For i = 1 To .Sheets.Count
-            If IsChart(wkb, i) Then
-                k = k + 1
-                Set cha = .Sheets(i)
-                Call FillArrayWithSCData(wkb, cha, arrData, i, j, k)
+        iSCTotal = 1
+        For iSheetIndex = 1 To .Sheets.Count
+            If IsChart(wkb, iSheetIndex) Then
+                iChartNumber = iChartNumber + 1
+                Set cha = .Sheets(iSheetIndex)
+                Call FillArrayWithSCData( _
+                        wkb, _
+                        cha, _
+                        arrData, _
+                        iSheetIndex, _
+                        iSCTotal, _
+                        iChartNumber _
+                )
             Else
-                For Each crt In .Sheets(i).ChartObjects
-                    k = k + 1
+                For Each crt In .Sheets(iSheetIndex).ChartObjects
+                    iChartNumber = iChartNumber + 1
                     Set cha = crt.Chart
-                    Call FillArrayWithSCData(wkb, cha, arrData, i, j, k)
+                    Call FillArrayWithSCData( _
+                            wkb, _
+                            cha, _
+                            arrData, _
+                            iSheetIndex, _
+                            iSCTotal, _
+                            iChartNumber _
+                    )
                 Next
             End If
         Next
@@ -708,80 +722,81 @@ Private Sub FillArrayWithSCData( _
     ByVal wkb As Workbook, _
     ByVal cha As Chart, _
     ByRef arrData As Variant, _
-    ByRef i As Long, _
-    ByRef j As Long, _
-    ByRef k As Long _
+    ByRef iSheetIndex As Long, _
+    ByRef iSCTotal As Long, _
+    ByRef iChartNumber As Long _
 )
 
     Dim myChart As clsChartSeries
-    Dim l As Long
+    Dim iSC As Long
     
     
     With wkb
-        arrData(j, eSD.ChartNumber) = k
-        arrData(j, eSD.SheetName) = .Sheets(i).Name
+        arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
+        arrData(iSCTotal, eSD.SheetName) = .Sheets(iSheetIndex).Name
         If Not .Name = cha.Parent.Name Then
-            arrData(j, eSD.ChartName) = cha.Parent.Name
+            arrData(iSCTotal, eSD.ChartName) = cha.Parent.Name
         End If
     End With
     
     With cha
-        If .HasTitle Then arrData(j, eSD.ChartTitle) = .ChartTitle.Text
+        If .HasTitle Then arrData(iSCTotal, eSD.ChartTitle) = .ChartTitle.Text
         If .Axes(xlCategory).HasTitle Then _
-                arrData(j, eSD.XLabel) = .Axes(xlCategory).AxisTitle.Text
+                arrData(iSCTotal, eSD.XLabel) = .Axes(xlCategory).AxisTitle.Text
         If .Axes(xlValue).HasTitle Then _
-                arrData(j, eSD.YLabel) = .Axes(xlValue, xlPrimary).AxisTitle.Text
+                arrData(iSCTotal, eSD.YLabel) = .Axes(xlValue, xlPrimary).AxisTitle.Text
         If .HasAxis(xlValue, xlSecondary) Then
             If .Axes(xlValue, xlSecondary).HasTitle Then
-                arrData(j, eSD.Y2Label) = .Axes(xlValue, xlSecondary).AxisTitle.Text
+                arrData(iSCTotal, eSD.Y2Label) = .Axes(xlValue, xlSecondary).AxisTitle.Text
             End If
         End If
-        For l = 1 To .SeriesCollection.Count
-            arrData(j, eSD.ChartNumber) = k
+        For iSC = 1 To .SeriesCollection.Count
+            arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
             Set myChart = New clsChartSeries
             With myChart
                 .Chart = cha
-                .ChartSeries = l
-'                arrData(j, eSD.SeriesName) = .SeriesName
-                arrData(j, eSD.SeriesName) = cha.SeriesCollection(l).Name
+                .ChartSeries = iSC
+'                arrData(iSCTotal, eSD.SeriesName) = .SeriesName
+                arrData(iSCTotal, eSD.SeriesName) = cha.SeriesCollection(iSC).Name
                 
                 Select Case .XValuesType
                     Case "Range"
-                        arrData(j, eSD.SeriesXValues) = .XValues.Address(False, False)
+                        arrData(iSCTotal, eSD.SeriesXValues) = .XValues.Address(False, False)
                     Case "inaccessible"
-                        arrData(j, eSD.SeriesXValues) = "#REF"
+                        arrData(iSCTotal, eSD.SeriesXValues) = "#REF"
                     Case Else
-                        arrData(j, eSD.SeriesXValues) = .XValues
+                        arrData(iSCTotal, eSD.SeriesXValues) = .XValues
                 End Select
                 
                 Select Case .ValuesType
                     Case "Range"
-                        arrData(j, eSD.SeriesDataSheet) = .DataSheet(3)
-                        arrData(j, eSD.SeriesYValues) = .Values.Address(False, False)
+                        arrData(iSCTotal, eSD.SeriesDataSheet) = .DataSheet(3)
+                        arrData(iSCTotal, eSD.SeriesYValues) = .Values.Address(False, False)
                     Case "inaccessible"
-                        arrData(j, eSD.SeriesYValues) = "#REF"
+                        arrData(iSCTotal, eSD.SeriesYValues) = "#REF"
                     Case Else
-                        arrData(j, eSD.SeriesYValues) = .Values
+                        arrData(iSCTotal, eSD.SeriesYValues) = .Values
                 End Select
                 
-                Select Case cha.SeriesCollection(l).AxisGroup
+                Select Case cha.SeriesCollection(iSC).AxisGroup
                     Case xlPrimary
-                        arrData(j, eSD.AxisGroup) = 1
+                        arrData(iSCTotal, eSD.AxisGroup) = 1
                     Case xlSecondary
-                        arrData(j, eSD.AxisGroup) = 2
+                        arrData(iSCTotal, eSD.AxisGroup) = 2
                 End Select
                 
-                arrData(j, eSD.PlotOrder) = cha.SeriesCollection(l).PlotOrder
-                arrData(j, eSD.PlotOrderTotal) = .PlotOrder
+                arrData(iSCTotal, eSD.PlotOrder) = cha.SeriesCollection(iSC).PlotOrder
+                arrData(iSCTotal, eSD.PlotOrderTotal) = .PlotOrder
                 'we don't want to have written a possible "inaccessible" in the
                 'list, so we overwrite it in that case
-                If arrData(j, eSD.PlotOrderTotal) = "inaccessible" Then
-                    arrData(j, eSD.PlotOrderTotal) = vbNullString
+                If arrData(iSCTotal, eSD.PlotOrderTotal) = "inaccessible" Then
+                    arrData(iSCTotal, eSD.PlotOrderTotal) = vbNullString
                 End If
                 
-                arrData(j, eSD.XYDataSheetEqual) = (arrData(j, eSD.SeriesDataSheet) = .DataSheet(2))
+                arrData(iSCTotal, eSD.XYDataSheetEqual) = _
+                        (arrData(iSCTotal, eSD.SeriesDataSheet) = .DataSheet(2))
                 
-                j = j + 1
+                iSCTotal = iSCTotal + 1
             End With
         Next
     End With
