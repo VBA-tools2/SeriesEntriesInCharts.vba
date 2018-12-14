@@ -232,7 +232,7 @@ Private Sub PasteDataToCollectionSheet( _
             ).Address(False, False)
             .Cells(gciTitleRow - 1, iCol).Formula = _
                     "=CONCATENATE(CountUnique(" & sRange & ")," & _
-                    Chr(34) & " / " & Chr(34) & ",COUNTA(" & sRange & "))"
+                    Chr$(34) & " / " & Chr$(34) & ",COUNTA(" & sRange & "))"
         Next
     End With
     
@@ -599,8 +599,8 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
         'AxisGroup
         With .Cells(gciTitleRow, eSD.AxisGroup)
             .AddComment ( _
-                    "AxisGroup" & Chr(10) & _
-                    "1 = Primary Axis" & Chr(10) & _
+                    "AxisGroup" & Chr$(10) & _
+                    "1 = Primary Axis" & Chr$(10) & _
                     "2 = Secondary Axis" _
             )
             .Comment.Shape.TextFrame.AutoSize = True
@@ -642,8 +642,8 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
         'change page setup
         With .PageSetup
             'set header
-            .LeftHeader = "&Z&F" & Chr(10) & "&A"
-            .RightHeader = vbNullString & Chr(10) & "&D"
+            .LeftHeader = "&Z&F" & Chr$(10) & "&A"
+            .RightHeader = vbNullString & Chr$(10) & "&D"
             'set page orientation
             .Orientation = xlLandscape
             'print everything on one page
@@ -1117,7 +1117,7 @@ Private Function AreRowsOrColsEqual( _
     
     
     'if one of the ranges is not a range, no test is needed
-    If Left(sXRange, 1) = "{" Or Left(sYRange, 1) = "{" Then Exit Function
+    If Left$(sXRange, 1) = "{" Or Left$(sYRange, 1) = "{" Then Exit Function
     
     bAreRowsEqual = (ExtractRowsRange(sXRange) = ExtractRowsRange(sYRange))
     bAreColsEqual = (ExtractColumnsRange(sXRange) = ExtractColumnsRange(sYRange))
