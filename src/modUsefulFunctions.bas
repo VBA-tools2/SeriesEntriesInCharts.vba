@@ -28,6 +28,146 @@ Public Function RangeExists( _
 End Function
 
 
+'==============================================================================
+'at least in Excel 2016 there seems to be a bug when hyperlinks and
+'FormatConditions should be added to cells and a Chart is (currently) active.
+'Therefore store the currently active sheet, switch to 'wks' and restore it
+'afterwards.
+Public Function RememberActiveChartAndActivateGivenWorksheet( _
+    ByVal wks As Worksheet _
+        ) As Chart
+    If TypeName(ActiveSheet) = "Chart" Then
+        Set RememberActiveChartAndActivateGivenWorksheet = ActiveChart
+        wks.Activate
+    Else
+        Set RememberActiveChartAndActivateGivenWorksheet = Nothing
+    End If
+End Function
+
+
+'originally inspired by
+'<https://newtonexcelbach.wordpress.com/2013/12/07/extracting-numbers-from-text-strings/>
+'but heavily modified in the meantime
+'
+'NumberIndex_Or_SeparationString
+'  Because it doesn't make sense to ask for a specific numbers index *and* to
+'  state a string to separate the numbers, this argument is used for both
+'  purposes. If you state a number > 0 the corresponding number will be
+'  returned; if you state the number = 0 the number of found numbers will be
+'  returned; if you state a number < 0 the corresponding number from the end
+'  of the array will be returned and otherwise the given string will be used to
+'  separate the numbers
+Public Function ExtractNumbers( _
+    ByVal NumString As Variant, _
+    Optional ByVal NumberIndex_Or_SeparationString As Variant, _
+    Optional ByVal DecimalSign As Variant, _
+    Optional ByVal TakeNegative As Variant _
+        ) As Variant
+    
+    '==========================================================================
+    'negative sign
+    Const csNeg As String = "-"
+    'internal number separator
+    Const csSep As String = " "
+    '==========================================================================
+    
+    'initialize optional arguments, if they are not given
+    If IsMissing(DecimalSign) Then
+        DecimalSign = vbNullString
+    End If
+    If IsMissing(TakeNegative) Then
+        TakeNegative = False
+    ElseIf TypeName(TakeNegative) <> "Boolean" Then
+        ExtractNumbers = CVErr(xlErrNA)
+    End If
+    'if 'SeparationString' is missing it doesn't make sense to have no
+    ''SeparationString' if either 'TakeNegative' or 'DecimalSign' is given
+    If IsMissing(NumberIndex_Or_SeparationString) Then
+        If TakeNegative = True And DecimalSign <> vbNullString Then
+            NumberIndex_Or_SeparationString = vbNullString
+        Else
+            NumberIndex_Or_SeparationString = " "
+        End If
+    End If
+    
+    'initialize 'sNeg'
+    If TakeNegative = True Then
+        Dim sNeg As String
+        sNeg = csNeg 'Negative Sign MUST be before 1st number.
+    Else
+        sNeg = vbNullString
+    End If
+    
+    
+    'collect all valid chars and separate them by 'csSep' if in-between valid
+    'chars is a non-valid char
+    Dim i As Long
+    For i = 1 To Len(NumString)
+        Dim sChar As String
+        sChar = Mid$(NumString, i, 1)
+        If IsNumeric(sChar) Or sChar = sNeg Or sChar = DecimalSign Then
+            'special handler for the first found valid character
+            Dim sTemp As String
+            If Len(sTemp) <> 0 Then
+                Dim bValidChar As Boolean
+                If bValidChar = True Then
+                    sTemp = sTemp & Mid$(NumString, i, 1)
+                Else
+                    sTemp = sTemp & csSep & Mid$(NumString, i, 1)
+                End If
+            Else
+                '"initialize" 'sTemp'
+                sTemp = Mid$(NumString, i, 1)
+            End If
+            bValidChar = True
+        Else
+            bValidChar = False
+        End If
+    Next
+    
+    'convert all numbers to numbers
+    '(e.g. if the number in the text was given as "-.1" then it will be
+    ' formatted as "-0.1")
+    Dim arrNumbers As Variant
+    arrNumbers = Split(sTemp, csSep)
+    
+    For i = LBound(arrNumbers) To UBound(arrNumbers)
+        'this test is needed because a number *range* could be found
+        '(e.g. "2.5-5.5")
+        If IsNumeric(arrNumbers(i)) Then
+            arrNumbers(i) = CDbl(arrNumbers(i))
+        End If
+    Next
+    
+    'if 'arrNumbers' is empty then exit function
+    If UBound(arrNumbers) = -1 Then
+        ExtractNumbers = vbNullString
+    'if 'NumberIndex_Or_SeparationString' is a number return either the
+    'corresponding number with the given index or the number of found numbers
+    'depending on if the given number is >0 or not
+    ElseIf IsNumeric(NumberIndex_Or_SeparationString) Then
+        If NumberIndex_Or_SeparationString > 0 Then
+            ExtractNumbers = CDbl(arrNumbers(CInt(NumberIndex_Or_SeparationString) - 1))
+        ElseIf NumberIndex_Or_SeparationString < 0 Then
+            ExtractNumbers = arrNumbers(UBound(arrNumbers) + NumberIndex_Or_SeparationString + 1)
+        Else
+            ExtractNumbers = UBound(arrNumbers) - LBound(arrNumbers) + 1
+        End If
+    'otherwise return a string with all found numbers that is separated by
+    'the given string of 'NumberIndex_Or_SeparationString'
+    '(This is not totally correct, but have a look at the comments at
+    ' 'IsMissing(NumberIndex_Or_SeparationString)' for more details)
+    Else
+        sTemp = arrNumbers(LBound(arrNumbers))
+        For i = LBound(arrNumbers) + 1 To UBound(arrNumbers)
+            sTemp = sTemp & NumberIndex_Or_SeparationString & arrNumbers(i)
+        Next
+        ExtractNumbers = sTemp
+    End If
+    
+End Function
+
+
 Public Function ExtractRowsRange( _
     ByVal NumString As String _
         ) As String

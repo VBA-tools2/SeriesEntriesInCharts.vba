@@ -266,6 +266,9 @@ Private Sub AddHyperlinksToChartName( _
     iLastRow = rngSeriesData.Offset(-1, 0).End(xlDown).Row
     iNoOfEntries = iLastRow - iFirstRow + 1
     
+    Dim CurrentChart As Chart
+    Set CurrentChart = RememberActiveChartAndActivateGivenWorksheet(wks)
+    
     For i = 0 To iNoOfEntries - 1
         sChartName = rngSeriesData.Offset(i, eSD.ChartName - 1).Value
         If Len(sChartName) > 0 Then
@@ -277,6 +280,8 @@ Private Sub AddHyperlinksToChartName( _
             Call AddHyperlinkToCurrentCell(wks, rng, sHyperlinkTarget)
         End If
     Next
+    
+    If Not CurrentChart Is Nothing Then CurrentChart.Activate
     
     'format the columns
     Set rng = rngSeriesData.Offset( _
