@@ -33,28 +33,27 @@ Public Const gciTitleRow As Long = 2
 
 
 Public Sub ListAllSCEntriesInAllCharts()
-
-    Dim wkb As Workbook
-    Dim wksSeriesLegend As Worksheet
-    Dim arrData As Variant
-    Dim bAreSCsFound As Boolean
-    Dim bNewSeriesSheet As Boolean
-    
     
     With Application
         .ScreenUpdating = False
         .StatusBar = "Running 'ListAllSCEntriesInAllCharts' ..."
     End With
     
+    Dim wkb As Workbook
     Set wkb = ActiveWorkbook
     
     Call CollectAllHiddenStuffOnSheets(wkb)
     Call MakeAllStuffVisibleHidden(wkb, False)
     
+    Dim bAreSCsFound As Boolean
+    Dim arrData As Variant
     bAreSCsFound = CollectSCData(wkb, arrData)
     
     'store if the sheet was newly added/created
+    Dim bNewSeriesSheet As Boolean
     bNewSeriesSheet = WasSeriesEntriesInChartsWorksheetCreatedAndInitialized(wkb)
+    
+    Dim wksSeriesLegend As Worksheet
     Set wksSeriesLegend = wkb.Worksheets(gcsLegendSheetName)
     
     Call PasteDataToCollectionSheet(wksSeriesLegend, arrData)
@@ -92,19 +91,12 @@ Private Function CollectSCData( _
     ByRef arrData As Variant _
         ) As Boolean
     
-    Dim cha As Chart
-    Dim crt As ChartObject
-    Dim NoOfAllSCsInAllChartsInWorkbook As Long
-    Dim iSheetIndex As Long
-    Dim iSCTotal As Long
-    Dim iChartNumber As Long
-    Dim arrHeading As Variant
-    
-    
     'Set the default return value
     CollectSCData = False
     
+    Dim NoOfAllSCsInAllChartsInWorkbook As Long
     NoOfAllSCsInAllChartsInWorkbook = CountSCsInAllChartsInWorkbook(wkb)
+    
     If NoOfAllSCsInAllChartsInWorkbook = 0 Then
         MsgBox ("There are no Charts (with readable SeriesCollections) in " & _
                 "this Workbook.")
@@ -116,16 +108,24 @@ Private Function CollectSCData( _
         ''arrHeading' (+2 because 'arrHeading' is zero based and we need an
         'additional column to store, if 'XValues' and 'Values' are from the
         'same Worksheet)
+        Dim arrHeading As Variant
         arrHeading = TransferHeadingNamesToArray
     ReDim arrData(NoOfAllSCsInAllChartsInWorkbook, UBound(arrHeading) + 2)
     
     With wkb
         'fill the array
+        Dim iSCTotal As Long
         iSCTotal = 1
+        
+        Dim iSheetIndex As Long
         For iSheetIndex = 1 To .Sheets.Count
             If IsChart(wkb, iSheetIndex) Then
+                Dim iChartNumber As Long
                 iChartNumber = iChartNumber + 1
+                
+                Dim cha As Chart
                 Set cha = .Sheets(iSheetIndex)
+                
                 Call FillArrayWithSCData( _
                         wkb, _
                         cha, _
@@ -135,6 +135,7 @@ Private Function CollectSCData( _
                         iChartNumber _
                 )
             Else
+                Dim crt As ChartObject
                 For Each crt In .Sheets(iSheetIndex).ChartObjects
                     iChartNumber = iChartNumber + 1
                     Set cha = crt.Chart
@@ -152,23 +153,22 @@ Private Function CollectSCData( _
     End With
     
     CollectSCData = True
-
+    
 End Function
 
 
 Private Function WasSeriesEntriesInChartsWorksheetCreatedAndInitialized( _
     ByVal wkb As Workbook _
         ) As Boolean
-
-    Dim wks As Worksheet
-    Dim bNewSheet As Boolean
-    
     
     On Error Resume Next
+    Dim wks As Worksheet
     Set wks = wkb.Worksheets(gcsLegendSheetName)
     On Error GoTo 0
+    
     If wks Is Nothing Then
         Call CreateAndInitializeSeriesEntriesInChartsWorksheet(wkb)
+        Dim bNewSheet As Boolean
         bNewSheet = True
     Else
         bNewSheet = False
@@ -184,20 +184,12 @@ Private Sub PasteDataToCollectionSheet( _
     ByVal wks As Worksheet, _
     ByVal arrData As Variant _
 )
-
-    Dim rng As Range
-    Dim iFirstRow As Long
-    Dim iLastRow As Long
-    Dim i As Long
-    Dim iCol As Long
-    Dim arrStatisticFormulae As Variant
-    Dim sRange As String
-    
     
     With wks
         'first clear all entries
         .UsedRange.Offset(gciTitleRow).EntireRow.Delete Shift:=xlShiftUp
         
+        Dim rng As Range
         Set rng = .Cells(gciTitleRow + 1, 1)
     End With
     
@@ -211,12 +203,16 @@ Private Sub PasteDataToCollectionSheet( _
         ).Value = arrData
         
         'find first and last used row
+        Dim iFirstRow As Long
         iFirstRow = .Row
+        
+        Dim iLastRow As Long
         iLastRow = .Offset(-1, 0).End(xlDown).Row
     End With
     
     'add some "statistic" formulae to the first row showing the number of
     'unique entries in a number of total entries
+    Dim arrStatisticFormulae As Variant
     arrStatisticFormulae = Array( _
             eSD.SeriesName, _
             eSD.SeriesXValues, _
@@ -224,8 +220,12 @@ Private Sub PasteDataToCollectionSheet( _
     )
     
     With wks
+        Dim i As Long
         For i = LBound(arrStatisticFormulae) To UBound(arrStatisticFormulae)
+            Dim iCol As Long
             iCol = arrStatisticFormulae(i) - rng.Column + 1
+            
+            Dim sRange As String
             sRange = .Range( _
                     .Cells(iFirstRow, iCol), _
                     .Cells(iLastRow, iCol) _
@@ -242,41 +242,47 @@ End Sub
 Private Sub AddHyperlinksToChartName( _
     ByVal wks As Worksheet _
 )
-
-    Dim wkb As Workbook
-    Dim iFirstRow As Long
-    Dim iLastRow As Long
-    Dim iNoOfEntries As Long
-    Dim i As Long
-    Dim rngSeriesData As Range
-    Dim rng As Range
-    Dim sChartName As String
-    Dim sDataSheet As String
-    Dim sTopLeftCell As String
-    Dim sHyperlinkTarget As String
-    
     
     With wks
+        Dim wkb As Workbook
         Set wkb = .Parent
+        
+        Dim rngSeriesData As Range
         Set rngSeriesData = .Cells(gciTitleRow + 1, 1)
     End With
     
     'find number of entries in list
+    Dim iFirstRow As Long
     iFirstRow = rngSeriesData.Row
+    
+    Dim iLastRow As Long
     iLastRow = rngSeriesData.Offset(-1, 0).End(xlDown).Row
+    
+    Dim iNoOfEntries As Long
     iNoOfEntries = iLastRow - iFirstRow + 1
     
     Dim CurrentChart As Chart
     Set CurrentChart = RememberActiveChartAndActivateGivenWorksheet(wks)
     
+    Dim i As Long
     For i = 0 To iNoOfEntries - 1
+        Dim sChartName As String
         sChartName = rngSeriesData.Offset(i, eSD.ChartName - 1).Value
+        
         If Len(sChartName) > 0 Then
+            Dim rng As Range
             Set rng = rngSeriesData.Offset(i, eSD.ChartName - 1)
+            
+            Dim sDataSheet As String
             sDataSheet = rngSeriesData.Offset(i, eSD.SheetName - 1).Value
+            
+            Dim sTopLeftCell As String
             sTopLeftCell = wkb.Worksheets(sDataSheet). _
                     ChartObjects(sChartName).TopLeftCell.Address(False, False)
+            
+            Dim sHyperlinkTarget As String
             sHyperlinkTarget = "'" & sDataSheet & "'!" & sTopLeftCell
+            
             Call AddHyperlinkToCurrentCell(wks, rng, sHyperlinkTarget)
         End If
     Next
@@ -303,89 +309,90 @@ End Sub
 Private Sub AddButtonsThatHyperlinkToCharts( _
     ByVal wks As Worksheet _
 )
-
-    Dim iFirstRow As Long
-    Dim iLastRow As Long
-    Dim iNoOfEntries As Long
-    Dim i As Long
-    Dim rngSeriesData As Range
-    Dim rng As Range
-    Dim sSheetName As String
-    Dim sChartName As String
-    
     
     Call DeleteAllLabelShapesOnSheet(wks)
     
+    Dim rngSeriesData As Range
     Set rngSeriesData = wks.Cells(gciTitleRow + 1, 1)
     
+    Dim iFirstRow As Long
     iFirstRow = rngSeriesData.Row
+    
+    Dim iLastRow As Long
     iLastRow = rngSeriesData.Offset(-1, 0).End(xlDown).Row
+    
+    Dim iNoOfEntries As Long
     iNoOfEntries = iLastRow - iFirstRow + 1
     
+    Dim i As Long
     For i = 0 To iNoOfEntries - 1
+        Dim sSheetName As String
         sSheetName = rngSeriesData.Offset(i, eSD.SheetName - 1).Value
+        
+        Dim sChartName As String
         sChartName = rngSeriesData.Offset(i, eSD.ChartName - 1).Value
+        
         If Len(sSheetName) > 0 And Len(sChartName) = 0 Then
+            Dim rng As Range
             Set rng = rngSeriesData.Offset(i, eSD.SheetName - 1)
+            
             Call AddLabelToCell(rng)
         End If
     Next
-
+    
 End Sub
 
 
 Private Sub DeleteAllLabelShapesOnSheet( _
     ByVal wks As Worksheet _
 )
-
+    
     Dim shp As Shape
-    
-    
     For Each shp In wks.Shapes
         If shp.Type = msoTextBox Then
             shp.Delete
         End If
     Next
-
+    
 End Sub
 
 
 Private Sub AddLabelToCell( _
     ByVal rng As Range _
 )
-
-    Dim wks As Worksheet
-    Dim shp As Shape
     
     '==========================================================================
     Const csNamePrefix As String = "lblChart"
     '==========================================================================
     
-    
     With rng
+        Dim wks As Worksheet
         Set wks = .Parent
+        
+        Dim shp As Shape
         Set shp = wks.Shapes.AddLabel( _
                 msoTextOrientationHorizontal, _
                 .Left, .Top, .Width, .Height _
         )
     End With
+    
     With shp
         .Name = csNamePrefix & wks.Cells(rng.Row, 1)
         .OnAction = "GotoChartWithCellName"
     End With
-
+    
 End Sub
 
 
 'inspired by <https://excel.tips.net/T002539_Hyperlinks_to_Charts.html>
 Public Sub GotoChartWithCellName()
-
-    Dim wkb As Workbook
+    
     Dim rng As Range
-    
-    
     Set rng = ActiveSheet.Shapes(Application.Caller).TopLeftCell
+    
+    Dim wkb As Workbook
     Set wkb = ActiveSheet.Parent
+    
     On Error GoTo errHandler
     wkb.Sheets(rng.Value).Select
     On Error GoTo 0
@@ -403,38 +410,36 @@ End Sub
 Private Sub AddHyperlinksToSeriesData( _
     ByVal wks As Worksheet _
 )
-
-    Dim i As Long
-    Dim j As Long
-    Dim iFirstRow As Long
-    Dim iLastRow As Long
-    Dim iNoOfEntries As Long
-    Dim rngSeriesData As Range
-    Dim rng As Range
-    Dim rngTest As Range
-    Dim sDataSheet As String
-    Dim sRngValue As String
-    Dim sFirstCell As String
-    Dim sHyperlinkTarget As String
     
     Dim sListSeparator As String
-    
-    
     sListSeparator = Application.International(xlListSeparator)
     
+    Dim rngSeriesData As Range
     Set rngSeriesData = wks.Cells(gciTitleRow + 1, 1)
     
     'find number of entries in list
     With rngSeriesData
+        Dim iFirstRow As Long
         iFirstRow = .Row
+        
+        Dim iLastRow As Long
         iLastRow = .Offset(-1, 0).End(xlDown).Row
+        
+        Dim iNoOfEntries As Long
         iNoOfEntries = iLastRow - iFirstRow + 1
     End With
     
+    Dim i As Long
     For i = 0 To iNoOfEntries - 1
+        Dim sDataSheet As String
         sDataSheet = rngSeriesData.Offset(i, eSD.SeriesDataSheet - 1).Value
+        
+        Dim j As Long
         For j = eSD.SeriesXValues - 1 To eSD.SeriesYValues - 1
+            Dim rng As Range
             Set rng = rngSeriesData.Offset(i, j)
+            
+            Dim sRngValue As String
             sRngValue = rng.Value
             sRngValue = Replace(sRngValue, ",", sListSeparator)
 '---
@@ -445,10 +450,16 @@ On Error GoTo SkipAddingHyperlink
 'interestingly this 'GoTo' also doesn't work ...
 '---
             On Error Resume Next
+            Dim rngTest As Range
             Set rngTest = wks.Range(sRngValue)
+            
             If Not rngTest Is Nothing Then
+                Dim sFirstCell As String
                 sFirstCell = rngTest.Areas(1).Cells(1).Address(False, False)
+                
+                Dim sHyperlinkTarget As String
                 sHyperlinkTarget = "'" & sDataSheet & "'!" & sFirstCell
+                
                 Call AddHyperlinkToCurrentCell(wks, rng, sHyperlinkTarget)
             End If
             Set rngTest = Nothing
@@ -479,29 +490,29 @@ End Sub
 Private Sub MarkEachOddChartNumber( _
     ByVal wks As Worksheet _
 )
-
-    Dim i As Long
-    Dim iFirstRow As Long
-    Dim iLastRow As Long
-    Dim iNoOfEntries As Long
-    Dim rngSeriesData As Range
     
     '==========================================================================
     'color for odd chart numbers
     Const ccOddChartNumbers As Long = 15853276   'R=220 G=230 B=241
     '==========================================================================
     
-    
+    Dim rngSeriesData As Range
     Set rngSeriesData = wks.Cells(gciTitleRow + 1, 1)
     
     'find number of entries in list
     With rngSeriesData
+        Dim iFirstRow As Long
         iFirstRow = .Row
+        
+        Dim iLastRow As Long
         iLastRow = .Offset(-1, 0).End(xlDown).Row
+        
+        Dim iNoOfEntries As Long
         iNoOfEntries = iLastRow - iFirstRow + 1
     End With
     
     With rngSeriesData
+        Dim i As Long
         For i = 0 To iNoOfEntries - 1
             If .Offset(i, eSD.ChartNumber - 1).Value Mod 2 = 1 Then
                 .Offset(i).EntireRow.Interior.Color = ccOddChartNumbers
@@ -510,7 +521,7 @@ Private Sub MarkEachOddChartNumber( _
             End If
         Next
     End With
-
+    
 End Sub
 
 
@@ -548,25 +559,24 @@ End Sub
 Private Function CountSCsInAllChartsInWorkbook( _
     ByVal wkb As Workbook _
         ) As Long
-
-    Dim i As Long
-    Dim j As Long
-    Dim sc As Series
-    Dim crt As ChartObject
-    
     
     'just count the number of entries for the array first for all
+    Dim j As Long
     j = 0
+    
     With wkb
         'it gets a bit complicated, because charts can occur as
         '- dedicated "Chart" sheets and
         '- as "ChartObjects" on normal WorkSheets
+        Dim i As Long
         For i = 1 To .Sheets.Count
             If IsChart(wkb, i) Then
+                Dim sc As Series
                 For Each sc In .Sheets(i).SeriesCollection
                     j = j + 1
                 Next
             Else
+                Dim crt As ChartObject
                 For Each crt In .Sheets(i).ChartObjects
                     For Each sc In crt.Chart.SeriesCollection
                         j = j + 1
@@ -584,14 +594,13 @@ End Function
 Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
     ByVal wkb As Workbook _
 )
-
-    Dim wks As Worksheet
+    
     Dim arrHeading As Variant
-    
-    
     arrHeading = TransferHeadingNamesToArray
     
+    Dim wks As Worksheet
     Set wks = wkb.Worksheets.Add(, wkb.Worksheets(wkb.Worksheets.Count))
+    
     '"configure" the new sheet
     With wks
         .Name = gcsLegendSheetName
@@ -664,8 +673,6 @@ End Sub
 
 
 Private Function TransferHeadingNamesToArray() As Variant
-
-    Dim arrHeading As Variant
     
     '==========================================================================
     'which string separator should be used
@@ -688,7 +695,7 @@ Private Function TransferHeadingNamesToArray() As Variant
             "POt"
     '==========================================================================
     
-    
+    Dim arrHeading As Variant
     arrHeading = Split(csHeadingNames, csStringSep)
     
     TransferHeadingNamesToArray = arrHeading
@@ -701,7 +708,7 @@ Private Sub AddHyperlinkToCurrentCell( _
     ByRef rng As Range, _
     ByVal sHyperlinkTarget As String _
 )
-
+    
     'first test, if 'sHyperlinkTarget' is a (valid) range
     'if not, there is no hyperlink to add
     If Not RangeExists(wks.Parent, sHyperlinkTarget) Then Exit Sub
@@ -731,10 +738,6 @@ Private Sub FillArrayWithSCData( _
     ByRef iSCTotal As Long, _
     ByRef iChartNumber As Long _
 )
-
-    Dim myChart As clsChartSeries
-    Dim iSC As Long
-    
     
     With wkb
         arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
@@ -755,9 +758,14 @@ Private Sub FillArrayWithSCData( _
                 arrData(iSCTotal, eSD.Y2Label) = .Axes(xlValue, xlSecondary).AxisTitle.Text
             End If
         End If
+        
+        Dim iSC As Long
         For iSC = 1 To .SeriesCollection.Count
             arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
+            
+            Dim myChart As clsChartSeries
             Set myChart = New clsChartSeries
+            
             With myChart
                 .Chart = cha
                 .ChartSeries = iSC
@@ -814,21 +822,12 @@ Private Sub MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible( _
     ByVal arrData As Variant, _
     Optional ByVal bSheetName_Or_SeriesDataSheet As Boolean = False _
 )
-
-    Dim wksHiddenSheet As Worksheet
-    Dim wksSeriesLegend As Worksheet
-    Dim rngInvisibleSheets As Range
-    Dim rng As Range
-    Dim arrInvisibleSheets As Variant
-    Dim arrToMarkCells As Variant
-    Dim iCol As Long
-    Dim i As Long
-    Dim j As Long
     
     '==========================================================================
     'color for stuff that is hidden/invisible (fully)
     Const ccHidden As Long = 12040422            'R=230 G=184 B=183
     'which cells should be marked/tested
+    Dim arrToMarkCells As Variant
     arrToMarkCells = Array( _
             eSD.SeriesDataSheet, _
             eSD.SeriesXValues, _
@@ -836,15 +835,24 @@ Private Sub MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible( _
     )
     '==========================================================================
     
-    
+    Dim wksHiddenSheet As Worksheet
     Set wksHiddenSheet = wkb.Worksheets(gcsHiddenSheetName)
+    
+    Dim rngInvisibleSheets As Range
     Set rngInvisibleSheets = wksHiddenSheet.Range(gcsInvisibleSheetsRange)
+    
     If rngInvisibleSheets.Value = vbNullString Then Exit Sub
+    
+    Dim arrInvisibleSheets As Variant
     arrInvisibleSheets = rngInvisibleSheets.CurrentRegion.Value
     
+    Dim wksSeriesLegend As Worksheet
     Set wksSeriesLegend = wkb.Worksheets(gcsLegendSheetName)
+    
+    Dim rng As Range
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
     
+    Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
         If Not bSheetName_Or_SeriesDataSheet Then
             If IsInFirstColOf2DArray( _
@@ -858,14 +866,17 @@ Private Sub MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible( _
                     arrData(i, eSD.SeriesDataSheet), _
                     arrInvisibleSheets _
             ) Then
+                Dim j As Long
                 For j = LBound(arrToMarkCells) To UBound(arrToMarkCells)
+                    Dim iCol As Long
                     iCol = arrToMarkCells(j)
+                    
                     rng.Offset(i, iCol - 1).Interior.Color = ccHidden
                 Next
             End If
         End If
     Next
-
+    
 End Sub
 
 
@@ -873,16 +884,6 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
     ByVal wkb As Workbook, _
     ByVal arrData As Variant _
 )
-
-    Dim wksHiddenSheet As Worksheet
-    Dim wksSeriesLegend As Worksheet
-    Dim rngHiddenRanges As Range
-    Dim rng As Range
-    Dim arrHiddenRanges As Variant
-    Dim arrToMarkCells As Variant
-    Dim iCol As Long
-    Dim i As Long
-    Dim j As Long
     
     '==========================================================================
     'color for stuff that is hidden/invisible (fully)
@@ -890,26 +891,39 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
     'color for stuff that is hidden partially
     Const ccHiddenPartly As Long = 14408946      'R=242 G=220 B=219
     'which cells should be marked/tested
+    Dim arrToMarkCells As Variant
     arrToMarkCells = Array( _
             eSD.SeriesXValues, _
             eSD.SeriesYValues _
     )
     '==========================================================================
     
-    
+    Dim wksHiddenSheet As Worksheet
     Set wksHiddenSheet = wkb.Worksheets(gcsHiddenSheetName)
+    
+    Dim rngHiddenRanges As Range
     Set rngHiddenRanges = wksHiddenSheet.Range(gcsHiddenRangesRange)
+    
     If rngHiddenRanges.Value = vbNullString Then Exit Sub
+    
+    Dim arrHiddenRanges As Variant
     arrHiddenRanges = rngHiddenRanges.CurrentRegion.Value
     
+    Dim wksSeriesLegend As Worksheet
     Set wksSeriesLegend = wkb.Worksheets(gcsLegendSheetName)
+    
+    Dim rng As Range
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
     
+    Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
         If rng.Offset(i, eSD.SeriesDataSheet - 1) _
                 .Interior.Color <> ccHidden Then
+            Dim j As Long
             For j = LBound(arrToMarkCells) To UBound(arrToMarkCells)
+                Dim iCol As Long
                 iCol = arrToMarkCells(j)
+                
                 Select Case IsRangeHidden( _
                         wkb, _
                         arrData(i, eSD.SeriesDataSheet), _
@@ -924,7 +938,7 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
             Next
         End If
     Next
-
+    
 End Sub
 
 
@@ -933,16 +947,16 @@ Private Function IsInFirstColOf2DArray( _
     ByVal vArr As Variant _
         ) As Boolean
     
-    Dim i As Long
-    
-    
     IsInFirstColOf2DArray = False
+    
+    Dim i As Long
     For i = LBound(vArr) To UBound(vArr)
         If vArr(i, 1) = sString Then
             IsInFirstColOf2DArray = True
             Exit Function
         End If
     Next
+    
 End Function
 
 
@@ -953,40 +967,41 @@ Private Function IsRangeHidden( _
     ByVal arrHiddenRanges As Variant _
         ) As Long
     
-    Dim i As Long
-    Dim iHidden() As Long
-    Dim arrToTest As Variant
-    Dim arrHidden As Variant
-    Dim sHidden As String
-    Dim Element As Variant
-    Dim rngToTest As Range
-    Dim bWksFound As Boolean
-    
-    
     If Len(sRange) = 0 Then Exit Function
     
     'test if there is a hidden range on 'sWorksheet' and if yes,
     'create an array of hidden areas ('arrHidden')
+    Dim i As Long
     For i = LBound(arrHiddenRanges) To UBound(arrHiddenRanges)
         If sWorksheet = arrHiddenRanges(i, 1) Then
+            Dim arrHidden As Variant
             arrHidden = CreateArrayOfHiddenAreas( _
                     arrHiddenRanges(i, 2), _
                     arrHiddenRanges(i, 3) _
             )
+            
+            Dim bWksFound As Boolean
             bWksFound = True
+            
             Exit For
         End If
     Next
+    
     If Not bWksFound Then
         IsRangeHidden = 0
         Exit Function
     End If
     
+    Dim arrToTest As Variant
     arrToTest = Split(sRange, ",")
+    
+    Dim iHidden() As Long
     ReDim iHidden(LBound(arrToTest) To UBound(arrToTest))
     
     For i = LBound(arrToTest) To UBound(arrToTest)
+        Dim rngToTest As Range
         Set rngToTest = wkb.Worksheets(sWorksheet).Range(arrToTest(i))
+        
         iHidden(i) = IsAreaHidden(rngToTest, arrHidden)
     Next
     
@@ -1000,21 +1015,20 @@ Private Function CreateArrayOfHiddenAreas( _
     ByVal sColumns As String _
         ) As Variant
     
-    Dim sRange As String
-    Dim Arr As Variant
-    
-    
     If Len(sRows) > 0 And Len(sColumns) > 0 Then
+        Dim sRange As String
         sRange = sRows & "," & sColumns
     ElseIf Len(sRows) > 0 Then
         sRange = sRows
     Else
         sRange = sColumns
     End If
+    
+    Dim Arr As Variant
     Arr = Split(sRange, ",")
     
     CreateArrayOfHiddenAreas = Arr
-
+    
 End Function
 
 
@@ -1022,19 +1036,20 @@ Private Function IsAreaHidden( _
     ByVal rngToTest As Range, _
     ByVal Arr As Variant _
         ) As Long
-
+    
     Dim wks As Worksheet
-    Dim rng As Range
-    Dim rngIntersect As Range
-    Dim iHidden As Long
-    Dim i As Long
-    
-    
     Set wks = rngToTest.Parent
+    
+    Dim i As Long
     For i = LBound(Arr) To UBound(Arr)
+        Dim rng As Range
         Set rng = wks.Range(Arr(i))
+        
+        Dim rngIntersect As Range
         Set rngIntersect = Application.Intersect(rngToTest, rng)
+        
         If rngIntersect Is Nothing Then
+        Dim iHidden As Long
             iHidden = Application.WorksheetFunction.Max(0, iHidden)
         ElseIf rngToTest.Address = rngIntersect.Address Then
             iHidden = Application.WorksheetFunction.Max(2, iHidden)
@@ -1044,7 +1059,7 @@ Private Function IsAreaHidden( _
     Next
     
     IsAreaHidden = iHidden
-
+    
 End Function
 
 
@@ -1065,23 +1080,22 @@ Private Sub MarkSeriesNameIfXYValuesAreOnDifferentSheets( _
     ByVal wksSeriesLegend As Worksheet, _
     ByVal arrData As Variant _
 )
-
-    Dim i As Long
-    Dim rng As Range
     
     '==========================================================================
     'color for stuff that is "wrong"
     Const ccWrong As Long = 255            'R=255 G=0 B=0
     '==========================================================================
     
-    
+    Dim rng As Range
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
+    
+    Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
         If Not arrData(i, eSD.XYDataSheetEqual) Then
             rng.Offset(i, eSD.SeriesDataSheet - 1).Font.Color = ccWrong
         End If
     Next
-
+    
 End Sub
 
 
@@ -1089,17 +1103,16 @@ Private Sub MarkYValuesIfRowsOrColsDoNotCorrespond( _
     ByVal wksSeriesLegend As Worksheet, _
     ByVal arrData As Variant _
 )
-
-    Dim i As Long
-    Dim rng As Range
     
     '==========================================================================
     'color for stuff that is "wrong"
     Const ccWrong As Long = 255            'R=255 G=0 B=0
     '==========================================================================
     
-    
+    Dim rng As Range
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
+    
+    Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
         If Not AreRowsOrColsEqual( _
                 arrData(i, eSD.SeriesXValues), _
@@ -1108,7 +1121,7 @@ Private Sub MarkYValuesIfRowsOrColsDoNotCorrespond( _
             rng.Offset(i, eSD.SeriesYValues - 1).Font.Color = ccWrong
         End If
     Next
-
+    
 End Sub
 
 
@@ -1116,15 +1129,14 @@ Private Function AreRowsOrColsEqual( _
     ByVal sXRange As String, _
     ByVal sYRange As String _
         ) As Boolean
-
-    Dim bAreRowsEqual As Boolean
-    Dim bAreColsEqual As Boolean
-    
     
     'if one of the ranges is not a range, no test is needed
     If Left$(sXRange, 1) = "{" Or Left$(sYRange, 1) = "{" Then Exit Function
     
+    Dim bAreRowsEqual As Boolean
     bAreRowsEqual = (ExtractRowsRange(sXRange) = ExtractRowsRange(sYRange))
+    
+    Dim bAreColsEqual As Boolean
     bAreColsEqual = (ExtractColumnsRange(sXRange) = ExtractColumnsRange(sYRange))
     
     AreRowsOrColsEqual = (bAreRowsEqual Or bAreColsEqual)
