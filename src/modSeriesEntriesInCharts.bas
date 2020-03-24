@@ -34,10 +34,9 @@ Public Const gciTitleRow As Long = 2
 
 Public Sub ListAllSCEntriesInAllCharts()
     
-    With Application
-        .ScreenUpdating = False
-        .StatusBar = "Running 'ListAllSCEntriesInAllCharts' ..."
-    End With
+    Dim SpeedUp As XLSpeedUp
+    Set SpeedUp = New XLSpeedUp
+    SpeedUp.TurnOn statusBarMessage:="Running 'ListAllSCEntriesInAllCharts' ..."
     
     Dim wkb As Workbook
     Set wkb = ActiveWorkbook
@@ -81,7 +80,9 @@ Public Sub ListAllSCEntriesInAllCharts()
         Call StuffToBeDoneLast(wksSeriesLegend, bNewSeriesSheet)
     End If
     
-    Application.StatusBar = False
+TidyUp:
+    SpeedUp.TurnOff
+    Set SpeedUp = Nothing
     
 End Sub
 
