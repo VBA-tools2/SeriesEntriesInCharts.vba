@@ -774,17 +774,8 @@ Private Sub FillArrayWithSCData( _
                 arrData(iSCTotal, eSD.SeriesName) = cha.SeriesCollection(iSC).Name
                 
                 Select Case .XValuesType
-                    Case "Range"
+                    Case "Range", "Open External Range"
                         arrData(iSCTotal, eSD.SeriesXValues) = .XValues.Address(False, False)
-                    'external ranges can't be safely returned as a Range, because
-                    'in case that the external file is closed Excel can crash
-                    'thus, the parts have to be extracted "manually"
-                    Case "External Range"
-                        arrData(iSCTotal, eSD.SeriesXValues) = .XValues
-''---
-'                        Dim sXValues As String
-'                        sXValues = .XValues
-''---
                     Case "inaccessible"
                         arrData(iSCTotal, eSD.SeriesXValues) = "#REF"
                     Case Else
@@ -792,7 +783,7 @@ Private Sub FillArrayWithSCData( _
                 End Select
                 
                 Select Case .ValuesType
-                    Case "Range"
+                    Case "Range", "Open External Range"
                         arrData(iSCTotal, eSD.SeriesDataSheet) = .DataSheet(3)
                         arrData(iSCTotal, eSD.SeriesYValues) = .Values.Address(False, False)
                     Case "inaccessible"
