@@ -14,6 +14,7 @@ Public Enum eSD
     YLabel
     Y2Label
     SeriesName
+    SeriesDataBook
     SeriesDataSheet
     SeriesXValues
     SeriesYValues
@@ -634,6 +635,7 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
         'add groups to some columns
         .Columns(eSD.ChartName).Group
         .Columns(eSD.Y2Label).Group
+        .Columns(eSD.SeriesDataBook).Group
         .Columns(eSD.SeriesDataSheet).Group
         '----------------------------------------------------------------------
         
@@ -688,6 +690,7 @@ Private Function TransferHeadingNamesToArray() As Variant
             "y axis" & csStringSep & _
             "y axis 2" & csStringSep & _
             "Series.Name" & csStringSep & _
+            "Series.DataBook" & csStringSep & _
             "Series.DataSheet" & csStringSep & _
             "Series.XValues" & csStringSep & _
             "Series.Values" & csStringSep & _
@@ -784,6 +787,7 @@ Private Sub FillArrayWithSCData( _
                 
                 Select Case .ValuesType
                     Case "Range", "Open External Range"
+                        arrData(iSCTotal, eSD.SeriesDataBook) = .DataBook(3)
                         arrData(iSCTotal, eSD.SeriesDataSheet) = .DataSheet(3)
                         arrData(iSCTotal, eSD.SeriesYValues) = .Values.Address(False, False)
                     Case "inaccessible"
