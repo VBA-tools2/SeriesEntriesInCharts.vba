@@ -1,5 +1,7 @@
 Attribute VB_Name = "modHiddenStuff"
 
+'@Folder("ChartSeries")
+
 Option Explicit
 Option Private Module
 
@@ -17,7 +19,7 @@ Public Const gcsHiddenRangesRange As String = "HiddenRages"
 Public Sub CollectAllHiddenStuffOnSheets( _
     ByVal wkb As Workbook _
 )
-
+    
     Dim wks As Worksheet
     Dim arrInvisibleSheets As Variant
     Dim arrHiddenRanges As Variant
@@ -41,14 +43,14 @@ Public Sub CollectAllHiddenStuffOnSheets( _
                 UBound(arrHiddenRanges, 2) _
         ) = arrHiddenRanges
     End If
-
+    
 End Sub
 
 
 Private Function DoesHiddenStuffSheetAlreadyExist( _
     ByVal wkb As Workbook _
         ) As Boolean
-
+    
     Dim wks As Worksheet
     
     
@@ -63,7 +65,7 @@ End Function
 Private Function AddHiddenStuffSheetAndInitialize( _
     ByVal wkb As Workbook _
         ) As Worksheet
-
+    
     Dim wks As Worksheet
     Dim sActiveSheetName As String
     
@@ -83,14 +85,14 @@ Private Function AddHiddenStuffSheetAndInitialize( _
     End With
     
     Set AddHiddenStuffSheetAndInitialize = wks
-
+    
 End Function
 
 
 Private Function CollectInvisibleSheets( _
     ByVal wkb As Workbook _
         ) As Variant
-
+    
     Dim i As Long
     Dim iHidden As Long
     Dim Arr As Variant
@@ -116,14 +118,14 @@ Private Function CollectInvisibleSheets( _
     End If
     
     CollectInvisibleSheets = arrTransposed
-
+    
 End Function
 
 
 Private Function CollectHiddenRanges( _
     ByVal wkb As Workbook _
         ) As Variant
-
+    
     Dim ws As Worksheet
     Dim Arr As Variant
     Dim arrTransposed() As Variant
@@ -156,7 +158,7 @@ Private Function CollectHiddenRanges( _
     End If
     
     CollectHiddenRanges = arrTransposed
-
+    
 End Function
 
 
@@ -165,7 +167,7 @@ Public Sub MakeAllStuffVisibleHidden( _
     ByVal wkb As Workbook, _
     Optional ByVal bMakeHidden As Boolean = False _
 )
-
+    
     Dim wks As Worksheet
     
     
@@ -186,7 +188,7 @@ Private Sub MakeSheetsVisibleHidden( _
     ByVal wks As Worksheet, _
     Optional ByVal bMakeHidden As Boolean = False _
 )
-
+    
     Dim wkb As Workbook
     Dim rng As Range
     Dim Arr As Variant
@@ -210,7 +212,7 @@ Private Sub MakeSheetsVisibleHidden( _
             Next
         End If
     End With
-
+    
 End Sub
 
 
@@ -218,7 +220,7 @@ Private Sub MakeRangesVisibleHidden( _
     ByVal wksHiddenStuff As Worksheet, _
     Optional ByVal bMakeHidden As Boolean = False _
 )
-
+    
     Dim wkb As Workbook
     Dim wks As Worksheet
     Dim rngHiddenRanges As Range
@@ -250,5 +252,5 @@ Private Sub MakeRangesVisibleHidden( _
             Next
         End If
     Next
-
+    
 End Sub

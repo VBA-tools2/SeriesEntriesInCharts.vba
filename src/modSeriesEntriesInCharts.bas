@@ -1,5 +1,7 @@
 Attribute VB_Name = "modSeriesEntriesInCharts"
 
+'@Folder("ChartSeries")
+
 Option Explicit
 Option Base 1
 
@@ -14,9 +16,13 @@ Public Enum eSD
     YLabel
     Y2Label
     SeriesName
-    SeriesDataBook
-    SeriesDataSheet
+    SeriesXPath
+    SeriesXBook
+    SeriesXSheet
     SeriesXValues
+    SeriesYPath
+    SeriesYBook
+    SeriesYSheet
     SeriesYValues
     AxisGroup
     PlotOrder
@@ -25,11 +31,14 @@ Public Enum eSD
     [_Last] = eSD.XYDataSheetEqual
 End Enum
 
+
 '==============================================================================
 'sheet name of pasted Series data?
-Public Const gcsLegendSheetName As String = "SeriesEntriesInCharts"
-'title row on 'gcsLegendSheetName'
+Private Const pcsLegendSheetName As String = "SeriesEntriesInCharts"
+'title row on 'pcsLegendSheetName'
 Public Const gciTitleRow As Long = 2
+'what is written to 'Series.Values' (etc.) when the series is not accessible?
+Private Const pcsInaccessible = "#Inaccessible"
 '==============================================================================
 
 
@@ -54,15 +63,15 @@ Public Sub ListAllSCEntriesInAllCharts()
     bNewSeriesSheet = WasSeriesEntriesInChartsWorksheetCreatedAndInitialized(wkb)
     
     Dim wksSeriesLegend As Worksheet
-    Set wksSeriesLegend = wkb.Worksheets(gcsLegendSheetName)
+    Set wksSeriesLegend = wkb.Worksheets(pcsLegendSheetName)
     
     Call PasteDataToCollectionSheet(wksSeriesLegend, arrData)
     
     If bAreSCsFound Then
         Call MarkEachOddChartNumber(wksSeriesLegend)
         
-        Call MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible(wkb, arrData, False)
-        Call MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible(wkb, arrData, True)
+        Call MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible(wkb, arrData, False)
+        Call MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible(wkb, arrData, True)
         Call MarkSeriesDataIfSourceIsHidden(wkb, arrData)
     End If
     
@@ -73,7 +82,7 @@ Public Sub ListAllSCEntriesInAllCharts()
         Call AddButtonsThatHyperlinkToCharts(wksSeriesLegend)
         Call AddHyperlinksToSeriesData(wksSeriesLegend)
         
-        Call MarkSeriesNameIfXYValuesAreOnDifferentSheets(wksSeriesLegend, arrData)
+        Call MarkSeriesSheetIfXYValuesAreOnDifferentSheets(wksSeriesLegend, arrData)
         Call MarkYValuesIfRowsOrColsDoNotCorrespond(wksSeriesLegend, arrData)
         
         Call ApplyExtensions(wksSeriesLegend, bNewSeriesSheet, arrData)
@@ -87,6 +96,8 @@ TidyUp:
     
 End Sub
 
+
+'==============================================================================
 
 Private Function CollectSCData( _
     ByVal wkb As Workbook, _
@@ -106,28 +117,41 @@ Private Function CollectSCData( _
     End If
     
     'declare bounds of array
-        'for that the number of columns is needed which can be extracted from
-        ''arrHeading' (+2 because 'arrHeading' is zero based and we need an
-        'additional column to store, if 'XValues' and 'Values' are from the
-        'same Worksheet)
-        Dim arrHeading As Variant
-        arrHeading = TransferHeadingNamesToArray
+    '(for that the number of columns is needed which can be extracted from
+    ' 'arrHeading' (+2 because 'arrHeading' is zero based and we need an
+    ' additional column to store, if 'XValues' and 'Values' are from the
+    ' same Worksheet))
+    Dim arrHeading As Variant
+    arrHeading = TransferHeadingNamesToArray
     ReDim arrData(NoOfAllSCsInAllChartsInWorkbook, UBound(arrHeading) + 2)
+    Erase arrHeading
     
-    With wkb
-        'fill the array
-        Dim iSCTotal As Long
-        iSCTotal = 1
-        
-        Dim iSheetIndex As Long
-        For iSheetIndex = 1 To .Sheets.Count
-            If IsChart(wkb, iSheetIndex) Then
-                Dim iChartNumber As Long
+    'fill the array
+    Dim iSCTotal As Long
+    iSCTotal = 1
+    
+    Dim iSheetIndex As Long
+    For iSheetIndex = 1 To wkb.Sheets.Count
+        If IsChart(wkb, iSheetIndex) Then
+            Dim iChartNumber As Long
+            iChartNumber = iChartNumber + 1
+            
+            Dim cha As Chart
+            Set cha = wkb.Sheets(iSheetIndex)
+            
+            Call FillArrayWithSCData( _
+                    wkb, _
+                    cha, _
+                    arrData, _
+                    iSheetIndex, _
+                    iSCTotal, _
+                    iChartNumber _
+            )
+        Else
+            Dim crt As ChartObject
+            For Each crt In wkb.Sheets(iSheetIndex).ChartObjects
                 iChartNumber = iChartNumber + 1
-                
-                Dim cha As Chart
-                Set cha = .Sheets(iSheetIndex)
-                
+                Set cha = crt.Chart
                 Call FillArrayWithSCData( _
                         wkb, _
                         cha, _
@@ -136,23 +160,9 @@ Private Function CollectSCData( _
                         iSCTotal, _
                         iChartNumber _
                 )
-            Else
-                Dim crt As ChartObject
-                For Each crt In .Sheets(iSheetIndex).ChartObjects
-                    iChartNumber = iChartNumber + 1
-                    Set cha = crt.Chart
-                    Call FillArrayWithSCData( _
-                            wkb, _
-                            cha, _
-                            arrData, _
-                            iSheetIndex, _
-                            iSCTotal, _
-                            iChartNumber _
-                    )
-                Next
-            End If
-        Next
-    End With
+            Next
+        End If
+    Next
     
     CollectSCData = True
     
@@ -165,7 +175,7 @@ Private Function WasSeriesEntriesInChartsWorksheetCreatedAndInitialized( _
     
     On Error Resume Next
     Dim wks As Worksheet
-    Set wks = wkb.Worksheets(gcsLegendSheetName)
+    Set wks = wkb.Worksheets(pcsLegendSheetName)
     On Error GoTo 0
     
     If wks Is Nothing Then
@@ -217,7 +227,13 @@ Private Sub PasteDataToCollectionSheet( _
     Dim arrStatisticFormulae As Variant
     arrStatisticFormulae = Array( _
             eSD.SeriesName, _
+            eSD.SeriesXPath, _
+            eSD.SeriesXBook, _
+            eSD.SeriesXSheet, _
             eSD.SeriesXValues, _
+            eSD.SeriesYPath, _
+            eSD.SeriesYBook, _
+            eSD.SeriesYSheet, _
             eSD.SeriesYValues _
     )
     
@@ -285,7 +301,10 @@ Private Sub AddHyperlinksToChartName( _
             Dim sHyperlinkTarget As String
             sHyperlinkTarget = "'" & sDataSheet & "'!" & sTopLeftCell
             
-            Call AddHyperlinkToCurrentCell(wks, rng, sHyperlinkTarget)
+            AddHyperlinkToCurrentCell _
+                    wks, _
+                    rng, _
+                    sHyperlinkTarget
         End If
     Next
     
@@ -409,6 +428,7 @@ errHandler:
 End Sub
 
 
+'TODO: also do for 'SeriesYSheet'
 Private Sub AddHyperlinksToSeriesData( _
     ByVal wks As Worksheet _
 )
@@ -434,7 +454,7 @@ Private Sub AddHyperlinksToSeriesData( _
     Dim i As Long
     For i = 0 To iNoOfEntries - 1
         Dim sDataSheet As String
-        sDataSheet = rngSeriesData.Offset(i, eSD.SeriesDataSheet - 1).Value
+        sDataSheet = rngSeriesData.Offset(i, eSD.SeriesXSheet - 1).Value
         
         Dim j As Long
         For j = eSD.SeriesXValues - 1 To eSD.SeriesYValues - 1
@@ -605,7 +625,7 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
     
     '"configure" the new sheet
     With wks
-        .Name = gcsLegendSheetName
+        .Name = pcsLegendSheetName
         .Tab.ThemeColor = xlThemeColorLight1
         .Tab.TintAndShade = 0
         
@@ -635,8 +655,12 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
         'add groups to some columns
         .Columns(eSD.ChartName).Group
         .Columns(eSD.Y2Label).Group
-        .Columns(eSD.SeriesDataBook).Group
-        .Columns(eSD.SeriesDataSheet).Group
+        .Columns(eSD.SeriesXPath).Group
+        .Columns(eSD.SeriesXBook).Group
+        .Columns(eSD.SeriesXSheet).Group
+        .Columns(eSD.SeriesYPath).Group
+        .Columns(eSD.SeriesYBook).Group
+        .Columns(eSD.SeriesYSheet).Group
         '----------------------------------------------------------------------
         
         'change style of title row
@@ -690,10 +714,14 @@ Private Function TransferHeadingNamesToArray() As Variant
             "y axis" & csStringSep & _
             "y axis 2" & csStringSep & _
             "Series.Name" & csStringSep & _
-            "Series.DataBook" & csStringSep & _
-            "Series.DataSheet" & csStringSep & _
-            "Series.XValues" & csStringSep & _
-            "Series.Values" & csStringSep & _
+            "Series.X.Path" & csStringSep & _
+            "Series.X.Book" & csStringSep & _
+            "Series.X.Sheet" & csStringSep & _
+            "Series.X.Values" & csStringSep & _
+            "Series.Y.Path" & csStringSep & _
+            "Series.Y.Book" & csStringSep & _
+            "Series.Y.Sheet" & csStringSep & _
+            "Series.Y.Values" & csStringSep & _
             "AG" & csStringSep & _
             "PO" & csStringSep & _
             "POt"
@@ -744,7 +772,6 @@ Private Sub FillArrayWithSCData( _
 )
     
     With wkb
-        arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
         arrData(iSCTotal, eSD.SheetName) = .Sheets(iSheetIndex).Name
         If Not .Name = cha.Parent.Name Then
             arrData(iSCTotal, eSD.ChartName) = cha.Parent.Name
@@ -766,35 +793,39 @@ Private Sub FillArrayWithSCData( _
         Dim iSC As Long
         For iSC = 1 To .SeriesCollection.Count
             arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
+            arrData(iSCTotal, eSD.SeriesName) = cha.SeriesCollection(iSC).Name
             
-            Dim myChart As clsChartSeries
-            Set myChart = New clsChartSeries
+            Dim MySeries As IChartSeries
+            Set MySeries = ChartSeries.Create(.SeriesCollection(iSC))
             
-            With myChart
-                .Chart = cha
-                .ChartSeries = iSC
+            With MySeries
 '                arrData(iSCTotal, eSD.SeriesName) = .SeriesName
-                arrData(iSCTotal, eSD.SeriesName) = cha.SeriesCollection(iSC).Name
-                
-                Select Case .XValuesType
-                    Case "Range", "Open External Range"
-                        arrData(iSCTotal, eSD.SeriesXValues) = .XValues.Address(False, False)
-                    Case "inaccessible"
-                        arrData(iSCTotal, eSD.SeriesXValues) = "#REF"
-                    Case Else
-                        arrData(iSCTotal, eSD.SeriesXValues) = .XValues
-                End Select
-                
-                Select Case .ValuesType
-                    Case "Range", "Open External Range"
-                        arrData(iSCTotal, eSD.SeriesDataBook) = .DataBook(3)
-                        arrData(iSCTotal, eSD.SeriesDataSheet) = .DataSheet(3)
-                        arrData(iSCTotal, eSD.SeriesYValues) = .Values.Address(False, False)
-                    Case "inaccessible"
-                        arrData(iSCTotal, eSD.SeriesYValues) = "#REF"
-                    Case Else
-                        arrData(iSCTotal, eSD.SeriesYValues) = .Values
-                End Select
+                If .IsSeriesAccessible Then
+                    With .XValues
+                        If .Range Is Nothing Then
+                            arrData(iSCTotal, eSD.SeriesXValues) = .FormulaPart
+                        Else
+                            arrData(iSCTotal, eSD.SeriesXPath) = .RangePath
+                            arrData(iSCTotal, eSD.SeriesXBook) = .RangeBook
+                            arrData(iSCTotal, eSD.SeriesXSheet) = .RangeSheet
+                            arrData(iSCTotal, eSD.SeriesXValues) = .RangeString
+                        End If
+                    End With
+                    
+                    With .Values
+                        If .Range Is Nothing Then
+                            arrData(iSCTotal, eSD.SeriesYValues) = .FormulaPart
+                        Else
+                            arrData(iSCTotal, eSD.SeriesYPath) = .RangePath
+                            arrData(iSCTotal, eSD.SeriesYBook) = .RangeBook
+                            arrData(iSCTotal, eSD.SeriesYSheet) = .RangeSheet
+                            arrData(iSCTotal, eSD.SeriesYValues) = .RangeString
+                        End If
+                    End With
+                Else
+                    arrData(iSCTotal, eSD.SeriesXValues) = pcsInaccessible
+                    arrData(iSCTotal, eSD.SeriesYValues) = pcsInaccessible
+                End If
                 
                 Select Case cha.SeriesCollection(iSC).AxisGroup
                     Case xlPrimary
@@ -804,15 +835,14 @@ Private Sub FillArrayWithSCData( _
                 End Select
                 
                 arrData(iSCTotal, eSD.PlotOrder) = cha.SeriesCollection(iSC).PlotOrder
-                arrData(iSCTotal, eSD.PlotOrderTotal) = .PlotOrder
-                'we don't want to have written a possible "inaccessible" in the
-                'list, so we overwrite it in that case
-                If arrData(iSCTotal, eSD.PlotOrderTotal) = "inaccessible" Then
-                    arrData(iSCTotal, eSD.PlotOrderTotal) = vbNullString
+                If .IsSeriesAccessible Then
+                    arrData(iSCTotal, eSD.PlotOrderTotal) = .PlotOrder.Value
                 End If
                 
                 arrData(iSCTotal, eSD.XYDataSheetEqual) = _
-                        (arrData(iSCTotal, eSD.SeriesDataSheet) = .DataSheet(2))
+                        (arrData(iSCTotal, eSD.SeriesXSheet) = arrData(iSCTotal, eSD.SeriesYSheet)) _
+                        And _
+                        (arrData(iSCTotal, eSD.SeriesXBook) = arrData(iSCTotal, eSD.SeriesYBook))
                 
                 iSCTotal = iSCTotal + 1
             End With
@@ -822,10 +852,11 @@ End Sub
 
 
 '==============================================================================
-Private Sub MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible( _
+'TODO: also add for 'SeriesYSheet'
+Private Sub MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible( _
     ByVal wkb As Workbook, _
     ByVal arrData As Variant, _
-    Optional ByVal bSheetName_Or_SeriesDataSheet As Boolean = False _
+    Optional ByVal bSheetName_Or_SeriesXSheet As Boolean = False _
 )
     
     '==========================================================================
@@ -834,7 +865,7 @@ Private Sub MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible( _
     'which cells should be marked/tested
     Dim arrToMarkCells As Variant
     arrToMarkCells = Array( _
-            eSD.SeriesDataSheet, _
+            eSD.SeriesXSheet, _
             eSD.SeriesXValues, _
             eSD.SeriesYValues _
     )
@@ -852,14 +883,14 @@ Private Sub MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible( _
     arrInvisibleSheets = rngInvisibleSheets.CurrentRegion.Value
     
     Dim wksSeriesLegend As Worksheet
-    Set wksSeriesLegend = wkb.Worksheets(gcsLegendSheetName)
+    Set wksSeriesLegend = wkb.Worksheets(pcsLegendSheetName)
     
     Dim rng As Range
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
     
     Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
-        If Not bSheetName_Or_SeriesDataSheet Then
+        If Not bSheetName_Or_SeriesXSheet Then
             If IsInFirstColOf2DArray( _
                     arrData(i, eSD.SheetName), _
                     arrInvisibleSheets _
@@ -868,7 +899,7 @@ Private Sub MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible( _
             End If
         Else
             If IsInFirstColOf2DArray( _
-                    arrData(i, eSD.SeriesDataSheet), _
+                    arrData(i, eSD.SeriesXSheet), _
                     arrInvisibleSheets _
             ) Then
                 Dim j As Long
@@ -885,6 +916,7 @@ Private Sub MarkSheetNameOrSeriesDataSheetIfSourceIsInvisible( _
 End Sub
 
 
+'TODO: also needed 'SeriesYSheet'?
 Private Sub MarkSeriesDataIfSourceIsHidden( _
     ByVal wkb As Workbook, _
     ByVal arrData As Variant _
@@ -915,14 +947,14 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
     arrHiddenRanges = rngHiddenRanges.CurrentRegion.Value
     
     Dim wksSeriesLegend As Worksheet
-    Set wksSeriesLegend = wkb.Worksheets(gcsLegendSheetName)
+    Set wksSeriesLegend = wkb.Worksheets(pcsLegendSheetName)
     
     Dim rng As Range
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
     
     Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
-        If rng.Offset(i, eSD.SeriesDataSheet - 1) _
+        If rng.Offset(i, eSD.SeriesXSheet - 1) _
                 .Interior.Color <> ccHidden Then
             Dim j As Long
             For j = LBound(arrToMarkCells) To UBound(arrToMarkCells)
@@ -931,7 +963,7 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
                 
                 Select Case IsRangeHidden( _
                         wkb, _
-                        arrData(i, eSD.SeriesDataSheet), _
+                        arrData(i, eSD.SeriesXSheet), _
                         arrData(i, iCol), _
                         arrHiddenRanges _
                 )
@@ -1081,7 +1113,8 @@ Private Function ReturnHiddenState( _
 End Function
 
 
-Private Sub MarkSeriesNameIfXYValuesAreOnDifferentSheets( _
+'TODO: would 'SeriesYSheet' be helpful here?
+Private Sub MarkSeriesSheetIfXYValuesAreOnDifferentSheets( _
     ByVal wksSeriesLegend As Worksheet, _
     ByVal arrData As Variant _
 )
@@ -1097,7 +1130,7 @@ Private Sub MarkSeriesNameIfXYValuesAreOnDifferentSheets( _
     Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
         If Not arrData(i, eSD.XYDataSheetEqual) Then
-            rng.Offset(i, eSD.SeriesDataSheet - 1).Font.Color = ccWrong
+            rng.Offset(i, eSD.SeriesXSheet - 1).Font.Color = ccWrong
         End If
     Next
     

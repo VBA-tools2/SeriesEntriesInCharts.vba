@@ -1,5 +1,7 @@
 Attribute VB_Name = "modExtensions"
 
+'@Folder("ChartSeries.Extensions")
+
 Option Explicit
 Option Private Module
 
