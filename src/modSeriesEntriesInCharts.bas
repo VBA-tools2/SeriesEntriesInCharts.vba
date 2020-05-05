@@ -862,18 +862,14 @@ Private Sub FillArrayWithSCData( _
                             arrData(iSCTotal, eSD.SeriesYValues) = .RangeString
                         End If
                     End With
+                    
+                    arrData(iSCTotal, eSD.PlotOrderTotal) = .PlotOrder.Value
                 Else
                     arrData(iSCTotal, eSD.SeriesXValues) = pcsInaccessible
                     arrData(iSCTotal, eSD.SeriesYValues) = pcsInaccessible
                 End If
                 
-                Select Case cha.SeriesCollection(iSC).AxisGroup
-                    Case xlPrimary
-                        arrData(iSCTotal, eSD.AxisGroup) = 1
-                    Case xlSecondary
-                        arrData(iSCTotal, eSD.AxisGroup) = 2
-                End Select
-                
+                arrData(iSCTotal, eSD.AxisGroup) = cha.SeriesCollection(iSC).AxisGroup
                 arrData(iSCTotal, eSD.PlotOrder) = cha.SeriesCollection(iSC).PlotOrder
                 If .IsSeriesAccessible Then
                     arrData(iSCTotal, eSD.PlotOrderTotal) = .PlotOrder.Value
