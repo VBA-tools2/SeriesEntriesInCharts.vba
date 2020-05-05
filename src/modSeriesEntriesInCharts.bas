@@ -838,52 +838,73 @@ Private Sub FillArrayWithSCData( _
             Dim MySeries As IChartSeries
             Set MySeries = ChartSeries.Create(.SeriesCollection(iSC))
             
-            With MySeries
-'                arrData(iSCTotal, eSD.SeriesName) = .SeriesName
-                If .IsSeriesAccessible Then
-                    With .XValues
-                        If .Range Is Nothing Then
-                            arrData(iSCTotal, eSD.SeriesXValues) = .FormulaPart
-                        Else
-                            arrData(iSCTotal, eSD.SeriesXPath) = .RangePath
-                            arrData(iSCTotal, eSD.SeriesXBook) = .RangeBook
-                            arrData(iSCTotal, eSD.SeriesXSheet) = .RangeSheet
-                            arrData(iSCTotal, eSD.SeriesXValues) = .RangeString
-                        End If
-                    End With
-                    
-                    With .Values
-                        If .Range Is Nothing Then
-                            arrData(iSCTotal, eSD.SeriesYValues) = .FormulaPart
-                        Else
-                            arrData(iSCTotal, eSD.SeriesYPath) = .RangePath
-                            arrData(iSCTotal, eSD.SeriesYBook) = .RangeBook
-                            arrData(iSCTotal, eSD.SeriesYSheet) = .RangeSheet
-                            arrData(iSCTotal, eSD.SeriesYValues) = .RangeString
-                        End If
-                    End With
-                    
-                    arrData(iSCTotal, eSD.PlotOrderTotal) = .PlotOrder.Value
-                Else
-                    arrData(iSCTotal, eSD.SeriesXValues) = pcsInaccessible
-                    arrData(iSCTotal, eSD.SeriesYValues) = pcsInaccessible
-                End If
-                
-                arrData(iSCTotal, eSD.AxisGroup) = cha.SeriesCollection(iSC).AxisGroup
-                arrData(iSCTotal, eSD.PlotOrder) = cha.SeriesCollection(iSC).PlotOrder
-                If .IsSeriesAccessible Then
-                    arrData(iSCTotal, eSD.PlotOrderTotal) = .PlotOrder.Value
-                End If
-                
-                arrData(iSCTotal, eSD.XYDataSheetEqual) = _
-                        (arrData(iSCTotal, eSD.SeriesXSheet) = arrData(iSCTotal, eSD.SeriesYSheet)) _
-                        And _
-                        (arrData(iSCTotal, eSD.SeriesXBook) = arrData(iSCTotal, eSD.SeriesYBook))
-                
-                iSCTotal = iSCTotal + 1
-            End With
+            FillArrayWithSCDataCurrentSeries _
+                    wkb, _
+                    iSCTotal, _
+                    MySeries, _
+                    arrData
+            
+            arrData(iSCTotal, eSD.AxisGroup) = .SeriesCollection(iSC).AxisGroup
+            arrData(iSCTotal, eSD.PlotOrder) = .SeriesCollection(iSC).PlotOrder
+            
+            arrData(iSCTotal, eSD.XYDataSheetEqual) = _
+                    (arrData(iSCTotal, eSD.SeriesXSheet) = arrData(iSCTotal, eSD.SeriesYSheet)) _
+                    And _
+                    (arrData(iSCTotal, eSD.SeriesXBook) = arrData(iSCTotal, eSD.SeriesYBook))
+            
+            iSCTotal = iSCTotal + 1
         Next
     End With
+End Sub
+
+
+Private Sub FillArrayWithSCDataCurrentSeries( _
+    ByVal wkb As Workbook, _
+    ByVal iSCTotal As Long, _
+    ByVal MySeries As IChartSeries, _
+    ByRef arrData As Variant _
+)
+    
+    With MySeries
+'        arrData(iSCTotal, eSD.SeriesName) = .SeriesName
+        If .IsSeriesAccessible Then
+            With .XValues
+                If .Range Is Nothing Then
+                    arrData(iSCTotal, eSD.SeriesXValues) = .FormulaPart
+                Else
+                    If Len(.RangePath) > 0 Then
+                        arrData(iSCTotal, eSD.SeriesXPath) = .RangePath
+                        arrData(iSCTotal, eSD.SeriesXBook) = .RangeBook
+                    ElseIf .RangeBook <> wkb.Name Or Len(.RangeSheet) = 0 Then
+                        arrData(iSCTotal, eSD.SeriesXBook) = .RangeBook
+                    End If
+                    arrData(iSCTotal, eSD.SeriesXSheet) = .RangeSheet
+                    arrData(iSCTotal, eSD.SeriesXValues) = .RangeString
+                End If
+            End With
+            
+            With .Values
+                If .Range Is Nothing Then
+                    arrData(iSCTotal, eSD.SeriesYValues) = .FormulaPart
+                Else
+                    If Len(.RangePath) > 0 Then
+                        arrData(iSCTotal, eSD.SeriesYPath) = .RangePath
+                        arrData(iSCTotal, eSD.SeriesYBook) = .RangeBook
+                    ElseIf .RangeBook <> wkb.Name Or Len(.RangeSheet) = 0 Then
+                        arrData(iSCTotal, eSD.SeriesYBook) = .RangeBook
+                    End If
+                    arrData(iSCTotal, eSD.SeriesYSheet) = .RangeSheet
+                    arrData(iSCTotal, eSD.SeriesYValues) = .RangeString
+                End If
+            End With
+            
+            arrData(iSCTotal, eSD.PlotOrderTotal) = .PlotOrder.Value
+        Else
+            arrData(iSCTotal, eSD.SeriesXValues) = pcsInaccessible
+            arrData(iSCTotal, eSD.SeriesYValues) = pcsInaccessible
+        End If
+    End With
+    
 End Sub
 
 
