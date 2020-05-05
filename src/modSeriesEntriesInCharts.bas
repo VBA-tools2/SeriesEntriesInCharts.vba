@@ -429,17 +429,8 @@ Private Sub AddHyperlinksToSeriesData( _
     Dim rngSeriesData As Range
     Set rngSeriesData = wks.Cells(gciTitleRow + 1, 1)
     
-    'find number of entries in list
-    With rngSeriesData
-        Dim iFirstRow As Long
-        iFirstRow = .Row
-        
-        Dim iLastRow As Long
-        iLastRow = .Offset(-1, 0).End(xlDown).Row
-        
-        Dim iNoOfEntries As Long
-        iNoOfEntries = iLastRow - iFirstRow + 1
-    End With
+    Dim iNoOfEntries As Long
+    iNoOfEntries = NoOfEntriesInList(rngSeriesData)
     
     Dim i As Long
     For i = 0 To iNoOfEntries - 1
@@ -487,6 +478,23 @@ On Error GoTo 0
     Next
     
 End Sub
+
+
+Private Function NoOfEntriesInList( _
+    ByVal rng As Range _
+        ) As Long
+    
+    With rng
+        Dim iFirstRow As Long
+        iFirstRow = .Row
+        
+        Dim iLastRow As Long
+        iLastRow = .Offset(-1, 0).End(xlDown).Row
+    End With
+    
+    NoOfEntriesInList = iLastRow - iFirstRow + 1
+    
+End Function
 
 
 Private Sub MarkEachOddChartNumber( _
