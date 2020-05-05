@@ -305,24 +305,14 @@ Private Sub AddHyperlinksToChartName( _
                     wks, _
                     rng, _
                     sHyperlinkTarget
+            
+            FormatHyperlinkCell _
+                    wks, _
+                    rng
         End If
     Next
     
     If Not CurrentChart Is Nothing Then CurrentChart.Activate
-    
-    'format the columns
-    Set rng = rngSeriesData.Offset( _
-            0, _
-            eSD.SheetName - 1 _
-    ).Resize( _
-            iNoOfEntries, _
-            eSD.ChartName - eSD.SheetName + 1 _
-    )
-    With rng.Font
-        .ColorIndex = xlColorIndexAutomatic
-        .Underline = xlUnderlineStyleNone
-'        .Size = wks.Cells(2, l).Font.Size
-    End With
     
 End Sub
 
@@ -485,26 +475,16 @@ On Error GoTo SkipAddingHyperlink
                 Call AddHyperlinkToCurrentCell(wks, rng, sHyperlinkTarget)
             End If
             Set rngTest = Nothing
+            
+            FormatHyperlinkCell _
+                    wks, _
+                    rng
 '---
 SkipAddingHyperlink:
 On Error GoTo 0
 '---
         Next
     Next
-    
-    'format the columns
-    Set rng = rngSeriesData.Offset( _
-            0, _
-            eSD.SeriesXValues - 1 _
-    ).Resize( _
-            iNoOfEntries, _
-            eSD.SeriesYValues - eSD.SeriesXValues + 1 _
-    )
-    With rng.Font
-        .ColorIndex = xlColorIndexAutomatic
-        .Underline = xlUnderlineStyleNone
-        .Size = wks.Cells(gciTitleRow + 1, 1).Font.Size
-    End With
     
 End Sub
 
@@ -745,19 +725,36 @@ Private Sub AddHyperlinkToCurrentCell( _
     'if not, there is no hyperlink to add
     If Not RangeExists(wks.Parent, sHyperlinkTarget) Then Exit Sub
     
+    DeleteAllHyperlinks rng
+    
+    wks.Hyperlinks.Add _
+            Anchor:=rng, _
+            Address:=vbNullString, _
+            SubAddress:=sHyperlinkTarget, _
+            ScreenTip:=sHyperlinkTarget
+    
+End Sub
+
+
+Private Sub DeleteAllHyperlinks( _
+    ByVal rng As Range _
+)
     With rng
-        'if hyperlink already set, delete them first
         Do Until .Hyperlinks.Count = 0
             .Hyperlinks(1).Delete
         Loop
     End With
-    
-    With wks
-        .Hyperlinks.Add _
-                Anchor:=rng, _
-                Address:=vbNullString, _
-                SubAddress:=sHyperlinkTarget, _
-                ScreenTip:=sHyperlinkTarget
+End Sub
+
+
+Private Sub FormatHyperlinkCell( _
+    ByVal wks As Worksheet, _
+    ByVal rng As Range _
+)
+    With rng.Font
+        .ColorIndex = xlColorIndexAutomatic
+        .Underline = xlUnderlineStyleNone
+        .Size = wks.Cells(gciTitleRow + 1, 1).Font.Size
     End With
 End Sub
 
