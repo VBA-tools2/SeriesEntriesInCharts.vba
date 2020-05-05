@@ -418,7 +418,6 @@ errHandler:
 End Sub
 
 
-'TODO: also do for 'SeriesYSheet'
 Private Sub AddHyperlinksToSeriesData( _
     ByVal wks As Worksheet _
 )
@@ -432,48 +431,27 @@ Private Sub AddHyperlinksToSeriesData( _
     Dim iNoOfEntries As Long
     iNoOfEntries = NoOfEntriesInList(rngSeriesData)
     
+    Dim arrHyperlinks As Variant
+    arrHyperlinks = Array( _
+            eSD.SeriesXValues - 1, _
+            eSD.SeriesYValues - 1 _
+    )
+    
     Dim i As Long
     For i = 0 To iNoOfEntries - 1
-        Dim sDataSheet As String
-        sDataSheet = rngSeriesData.Offset(i, eSD.SeriesXSheet - 1).Value
-        
         Dim j As Long
-        For j = eSD.SeriesXValues - 1 To eSD.SeriesYValues - 1
+        For j = LBound(arrHyperlinks) To UBound(arrHyperlinks)
             Dim rng As Range
-            Set rng = rngSeriesData.Offset(i, j)
+            Set rng = rngSeriesData.Offset(i, arrHyperlinks(j))
             
-            Dim sRngValue As String
-            sRngValue = rng.Value
-            sRngValue = Replace(sRngValue, ",", sListSeparator)
-'---
-'because currently commata in worksheet names are not supported, the entries
-'in the cells could be wrong and thus the following line can cause an error
-'--> for now, skip them then
-On Error GoTo SkipAddingHyperlink
-'interestingly this 'GoTo' also doesn't work ...
-'---
-            On Error Resume Next
-            Dim rngTest As Range
-            Set rngTest = wks.Range(sRngValue)
-            
-            If Not rngTest Is Nothing Then
-                Dim sFirstCell As String
-                sFirstCell = rngTest.Areas(1).Cells(1).Address(False, False)
-                
-                Dim sHyperlinkTarget As String
-                sHyperlinkTarget = "'" & sDataSheet & "'!" & sFirstCell
-                
-                Call AddHyperlinkToCurrentCell(wks, rng, sHyperlinkTarget)
-            End If
-            Set rngTest = Nothing
+            AddHyperlinkToCurrentEntry _
+                    wks, _
+                    rng, _
+                    sListSeparator
             
             FormatHyperlinkCell _
                     wks, _
                     rng
-'---
-SkipAddingHyperlink:
-On Error GoTo 0
-'---
         Next
     Next
     
@@ -495,6 +473,63 @@ Private Function NoOfEntriesInList( _
     NoOfEntriesInList = iLastRow - iFirstRow + 1
     
 End Function
+
+
+Private Sub AddHyperlinkToCurrentEntry( _
+    ByVal wks As Worksheet, _
+    ByVal rng As Range, _
+    ByVal sListSeparator As String _
+)
+    
+    Dim wkb As Workbook
+    Set wkb = wks.Parent
+    
+    Dim sDataBook As String
+    sDataBook = rng.Offset(0, -2).Value2
+    
+    'don't add external hyperlinks
+    If Len(sDataBook) > 0 Then
+        If sDataBook <> wkb.Name Then
+            Exit Sub
+        End If
+    End If
+    
+'NOTE: what is this good for?
+    Dim sRngValue As String
+    sRngValue = rng.Value2
+    sRngValue = Replace(sRngValue, ",", sListSeparator)
+    
+    Dim sDataSheet As String
+    sDataSheet = rng.Offset(0, -1).Value2
+    
+    If Len(sDataSheet) > 0 Then
+        Dim wksDataSheet As Worksheet
+        Set wksDataSheet = wkb.Worksheets(sDataSheet)
+        
+        On Error Resume Next
+        Dim rngTest As Range
+        Set rngTest = wksDataSheet.Range(sRngValue)
+        On Error GoTo 0
+    'global defined name
+    ElseIf Len(sDataBook) > 0 Then
+        Dim NM As Name
+        Set NM = wkb.Names(sRngValue)
+        
+        Set rngTest = NM.RefersToRange
+        sDataSheet = rngTest.Parent.Name
+    End If
+    
+    If Not rngTest Is Nothing Then
+        Dim sFirstCell As String
+        sFirstCell = rngTest.Areas(1).Cells(1).Address(False, False)
+        
+        Dim sHyperlinkTarget As String
+        sHyperlinkTarget = "'" & sDataSheet & "'!" & sFirstCell
+        
+        Call AddHyperlinkToCurrentCell(wks, rng, sHyperlinkTarget)
+    End If
+    
+End Sub
 
 
 Private Sub MarkEachOddChartNumber( _
