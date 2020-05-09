@@ -507,7 +507,7 @@ Private Sub AddHyperlinkToCurrentEntry( _
         Dim rngTest As Range
         Set rngTest = wksDataSheet.Range(sRngValue)
         On Error GoTo 0
-    'global defined name
+    'global defined name case
     ElseIf Len(sDataBook) > 0 Then
         Dim NM As Name
         Set NM = wkb.Names(sRngValue)
@@ -567,7 +567,6 @@ Private Sub MarkEachOddChartNumberRow( _
 End Sub
 
 
-'stuff that has to be done last
 Private Sub StuffToBeDoneLast( _
     ByVal wks As Worksheet, _
     ByVal bNewSheet As Boolean _
