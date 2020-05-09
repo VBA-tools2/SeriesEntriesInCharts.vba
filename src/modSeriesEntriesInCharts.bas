@@ -1079,16 +1079,10 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
     )
     '==========================================================================
     
-    Dim wksHiddenSheet As Worksheet
-    Set wksHiddenSheet = wkb.Worksheets(gcsHiddenSheetName)
-    
-    Dim rngHiddenRanges As Range
-    Set rngHiddenRanges = wksHiddenSheet.Range(gcsHiddenRangesRange)
-    
-    If rngHiddenRanges.Value = vbNullString Then Exit Sub
-    
     Dim arrHiddenRanges As Variant
-    arrHiddenRanges = rngHiddenRanges.CurrentRegion.Value
+    arrHiddenRanges = GetInvisibleRangesArray(wkb)
+    
+    If IsEmpty(arrHiddenRanges) Then Exit Sub
     
     Dim wksSeriesLegend As Worksheet
     Set wksSeriesLegend = wkb.Worksheets(pcsLegendSheetName)
@@ -1121,6 +1115,23 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
     Next
     
 End Sub
+
+
+Private Function GetInvisibleRangesArray( _
+    ByVal wkb As Workbook _
+        ) As Variant
+    
+    Dim wksHiddenSheet As Worksheet
+    Set wksHiddenSheet = wkb.Worksheets(gcsHiddenSheetName)
+    
+    Dim rngHiddenRanges As Range
+    Set rngHiddenRanges = wksHiddenSheet.Range(gcsHiddenRangesRange)
+    
+    If Len(rngHiddenRanges.Value2) = 0 Then Exit Function
+    
+    GetInvisibleRangesArray = rngHiddenRanges.CurrentRegion.Value2
+    
+End Function
 
 
 Private Function IsRangeHidden( _
