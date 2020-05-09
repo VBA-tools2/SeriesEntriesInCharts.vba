@@ -1090,28 +1090,29 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
     Dim rng As Range
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
     
-    Dim i As Long
-    For i = LBound(arrData) To UBound(arrData)
-        If rng.Offset(i, eSD.SeriesXSheet - 1) _
-                .Interior.Color <> ccHidden Then
-            Dim j As Long
-            For j = LBound(arrToMarkCells) To UBound(arrToMarkCells)
-                Dim iCol As Long
-                iCol = arrToMarkCells(j)
-                
-                Select Case IsRangeHidden( _
-                        wkb, _
-                        arrData(i, eSD.SeriesXSheet), _
-                        arrData(i, iCol), _
-                        arrHiddenRanges _
-                )
-                    Case 1
-                        rng.Offset(i, iCol - 1).Interior.Color = ccHiddenPartly
-                    Case 2
-                        rng.Offset(i, iCol - 1).Interior.Color = ccHidden
-                End Select
-            Next
-        End If
+    Dim iRow As Long
+    For iRow = LBound(arrData) To UBound(arrData)
+        Dim j As Long
+        For j = LBound(arrToMarkCells) To UBound(arrToMarkCells)
+            Dim iCol As Long
+            iCol = arrToMarkCells(j)
+            
+            If rng.Offset(iRow, iCol - 1).Interior.Color <> ccHidden Then
+                If IsRangeInWkb(wkb, arrData, iRow, iCol - 1) Then
+                    Select Case IsRangeHidden( _
+                            wkb, _
+                            arrData(iRow, iCol - 1), _
+                            arrData(iRow, iCol), _
+                            arrHiddenRanges _
+                    )
+                        Case 1
+                            rng.Offset(iRow, iCol - 1).Interior.Color = ccHiddenPartly
+                        Case 2
+                            rng.Offset(iRow, iCol - 1).Interior.Color = ccHidden
+                    End Select
+                End If
+            End If
+        Next
     Next
     
 End Sub
