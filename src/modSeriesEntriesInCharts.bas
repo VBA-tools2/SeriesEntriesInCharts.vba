@@ -1100,9 +1100,11 @@ Private Function CreateArrayOfHiddenAreas( _
     ByVal sColumns As String _
         ) As Variant
     
+    Const csSep As String = ","
+    
     If Len(sRows) > 0 And Len(sColumns) > 0 Then
         Dim sRange As String
-        sRange = sRows & "," & sColumns
+        sRange = sRows & csSep & sColumns
     ElseIf Len(sRows) > 0 Then
         sRange = sRows
     Else
@@ -1110,7 +1112,7 @@ Private Function CreateArrayOfHiddenAreas( _
     End If
     
     Dim Arr As Variant
-    Arr = Split(sRange, ",")
+    Arr = Split(sRange, csSep)
     
     CreateArrayOfHiddenAreas = Arr
     
