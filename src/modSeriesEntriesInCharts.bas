@@ -1144,11 +1144,19 @@ Private Function IsRangeHidden( _
     
     If Len(sRange) = 0 Then Exit Function
     
-    'test if there is a hidden range on 'sWorksheet' and if yes,
+    'handler for global defined name range
+    If Len(sWorksheet) = 0 Then
+        Dim sWks As String
+        sWks = GetWorksheetOfGlobalDefinedNameRange(wkb, sRange)
+    Else
+        sWks = sWorksheet
+    End If
+    
+    'test if there is a hidden range on 'sWks' and if yes,
     'create an array of hidden areas ('arrHidden')
     Dim i As Long
     For i = LBound(arrHiddenRanges) To UBound(arrHiddenRanges)
-        If sWorksheet = arrHiddenRanges(i, 1) Then
+        If sWks = arrHiddenRanges(i, 1) Then
             Dim arrHidden As Variant
             arrHidden = CreateArrayOfHiddenAreas( _
                     arrHiddenRanges(i, 2), _
@@ -1175,12 +1183,31 @@ Private Function IsRangeHidden( _
     
     For i = LBound(arrToTest) To UBound(arrToTest)
         Dim rngToTest As Range
-        Set rngToTest = wkb.Worksheets(sWorksheet).Range(arrToTest(i))
+        Set rngToTest = wkb.Worksheets(sWks).Range(arrToTest(i))
         
         iHidden(i) = IsAreaHidden(rngToTest, arrHidden)
     Next
     
     IsRangeHidden = ReturnHiddenState(iHidden)
+    
+End Function
+
+
+Private Function GetWorksheetOfGlobalDefinedNameRange( _
+    ByVal wkb As Workbook, _
+    ByVal sRange As String _
+        ) As String
+    
+    Dim NM As Name
+    Set NM = wkb.Names(sRange)
+    
+    Dim rng As Range
+    Set rng = NM.RefersToRange
+    
+    Dim wks As Worksheet
+    Set wks = rng.Parent
+    
+    GetWorksheetOfGlobalDefinedNameRange = wks.Name
     
 End Function
 
