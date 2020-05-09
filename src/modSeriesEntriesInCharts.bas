@@ -919,16 +919,10 @@ Private Sub MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible( _
     )
     '==========================================================================
     
-    Dim wksHiddenSheet As Worksheet
-    Set wksHiddenSheet = wkb.Worksheets(gcsHiddenSheetName)
-    
-    Dim rngInvisibleSheets As Range
-    Set rngInvisibleSheets = wksHiddenSheet.Range(gcsInvisibleSheetsRange)
-    
-    If rngInvisibleSheets.Value = vbNullString Then Exit Sub
-    
     Dim arrInvisibleSheets As Variant
-    arrInvisibleSheets = rngInvisibleSheets.CurrentRegion.Value
+    arrInvisibleSheets = GetInvisibleSheetsArray(wkb)
+    
+    If IsEmpty(arrInvisibleSheets) Then Exit Sub
     
     Dim wksSeriesLegend As Worksheet
     Set wksSeriesLegend = wkb.Worksheets(pcsLegendSheetName)
@@ -962,6 +956,23 @@ Private Sub MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible( _
     Next
     
 End Sub
+
+
+Private Function GetInvisibleSheetsArray( _
+    ByVal wkb As Workbook _
+        ) As Variant
+    
+    Dim wksHiddenSheet As Worksheet
+    Set wksHiddenSheet = wkb.Worksheets(gcsHiddenSheetName)
+    
+    Dim rngInvisibleSheets As Range
+    Set rngInvisibleSheets = wksHiddenSheet.Range(gcsInvisibleSheetsRange)
+    
+    If Len(rngInvisibleSheets.Value2) = 0 Then Exit Function
+    
+    GetInvisibleSheetsArray = rngInvisibleSheets.CurrentRegion.Value2
+    
+End Function
 
 
 'TODO: also needed 'SeriesYSheet'?
