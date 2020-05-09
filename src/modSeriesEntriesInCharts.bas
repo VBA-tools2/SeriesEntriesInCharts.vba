@@ -27,8 +27,7 @@ Public Enum eSD
     AxisGroup
     PlotOrder
     PlotOrderTotal
-    XYDataSheetEqual
-    [_Last] = eSD.XYDataSheetEqual
+    [_Last] = eSD.PlotOrderTotal
 End Enum
 
 
@@ -118,12 +117,10 @@ Private Function CollectSCData( _
     
     'declare bounds of array
     '(for that the number of columns is needed which can be extracted from
-    ' 'arrHeading' (+2 because 'arrHeading' is zero based and we need an
-    ' additional column to store, if 'XValues' and 'Values' are from the
-    ' same Worksheet))
+    ' 'arrHeading' (+1 because 'arrHeading' is zero based))
     Dim arrHeading As Variant
     arrHeading = TransferHeadingNamesToArray
-    ReDim arrData(NoOfAllSCsInAllChartsInWorkbook, UBound(arrHeading) + 2)
+    ReDim arrData(1 To NoOfAllSCsInAllChartsInWorkbook, 1 To UBound(arrHeading) + 1)
     Erase arrHeading
     
     'fill the array
@@ -847,11 +844,6 @@ Private Sub FillArrayWithSCData( _
             arrData(iSCTotal, eSD.AxisGroup) = .SeriesCollection(iSC).AxisGroup
             arrData(iSCTotal, eSD.PlotOrder) = .SeriesCollection(iSC).PlotOrder
             
-            arrData(iSCTotal, eSD.XYDataSheetEqual) = _
-                    (arrData(iSCTotal, eSD.SeriesXSheet) = arrData(iSCTotal, eSD.SeriesYSheet)) _
-                    And _
-                    (arrData(iSCTotal, eSD.SeriesXBook) = arrData(iSCTotal, eSD.SeriesYBook))
-            
             iSCTotal = iSCTotal + 1
         Next
     End With
@@ -1170,7 +1162,6 @@ Private Function ReturnHiddenState( _
 End Function
 
 
-'TODO: would 'SeriesYSheet' be helpful here?
 Private Sub MarkSeriesSheetIfXYValuesAreOnDifferentSheets( _
     ByVal wksSeriesLegend As Worksheet, _
     ByVal arrData As Variant _
@@ -1178,7 +1169,7 @@ Private Sub MarkSeriesSheetIfXYValuesAreOnDifferentSheets( _
     
     '==========================================================================
     'color for stuff that is "wrong"
-    Const ccWrong As Long = 255            'R=255 G=0 B=0
+    Const ccNotEqual As Long = 255            'R=255 G=0 B=0
     '==========================================================================
     
     Dim rng As Range
@@ -1186,8 +1177,9 @@ Private Sub MarkSeriesSheetIfXYValuesAreOnDifferentSheets( _
     
     Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
-        If Not arrData(i, eSD.XYDataSheetEqual) Then
-            rng.Offset(i, eSD.SeriesXSheet - 1).Font.Color = ccWrong
+        If arrData(i, eSD.SeriesXSheet) <> arrData(i, eSD.SeriesYSheet) Then
+            rng.Offset(i, eSD.SeriesXSheet - 1).Font.Color = ccNotEqual
+            rng.Offset(i, eSD.SeriesYSheet - 1).Font.Color = ccNotEqual
         End If
     Next
     
