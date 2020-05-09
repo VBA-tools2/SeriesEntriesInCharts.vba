@@ -860,7 +860,7 @@ Private Sub FillArrayWithSCDataCurrentSeries( _
 '        arrData(iSCTotal, eSD.SeriesName) = .SeriesName
         If .IsSeriesAccessible Then
             With .XValues
-                If .Range Is Nothing Then
+                If Not .IsRange Then
                     arrData(iSCTotal, eSD.SeriesXValues) = .FormulaPart
                 Else
                     If Len(.RangePath) > 0 Then
@@ -875,7 +875,7 @@ Private Sub FillArrayWithSCDataCurrentSeries( _
             End With
             
             With .Values
-                If .Range Is Nothing Then
+                If Not .IsRange Then
                     arrData(iSCTotal, eSD.SeriesYValues) = .FormulaPart
                 Else
                     If Len(.RangePath) > 0 Then
