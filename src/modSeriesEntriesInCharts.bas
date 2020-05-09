@@ -69,8 +69,7 @@ Public Sub ListAllSCEntriesInAllCharts()
     If bAreSCsFound Then
         Call MarkEachOddChartNumberRow(wksSeriesLegend)
         
-        Call MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible(wkb, arrData, False)
-        Call MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible(wkb, arrData, True)
+        Call MarkSheetEntriesIfSourceIsInvisible(wkb, arrData)
         Call MarkSeriesDataIfSourceIsHidden(wkb, arrData)
     End If
     
@@ -900,24 +899,10 @@ End Sub
 
 
 '==============================================================================
-'TODO: also add for 'SeriesYSheet'
-Private Sub MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible( _
+Private Sub MarkSheetEntriesIfSourceIsInvisible( _
     ByVal wkb As Workbook, _
-    ByVal arrData As Variant, _
-    Optional ByVal bSheetName_Or_SeriesXSheet As Boolean = False _
+    ByVal arrData As Variant _
 )
-    
-    '==========================================================================
-    'color for stuff that is hidden/invisible (fully)
-    Const ccHidden As Long = 12040422            'R=230 G=184 B=183
-    'which cells should be marked/tested
-    Dim arrToMarkCells As Variant
-    arrToMarkCells = Array( _
-            eSD.SeriesXSheet, _
-            eSD.SeriesXValues, _
-            eSD.SeriesYValues _
-    )
-    '==========================================================================
     
     Dim arrInvisibleSheets As Variant
     arrInvisibleSheets = GetInvisibleSheetsArray(wkb)
@@ -930,29 +915,14 @@ Private Sub MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible( _
     Dim rng As Range
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
     
-    Dim i As Long
-    For i = LBound(arrData) To UBound(arrData)
-        If Not bSheetName_Or_SeriesXSheet Then
-            If IsInFirstColOf2DArray( _
-                    arrData(i, eSD.SheetName), _
-                    arrInvisibleSheets _
-            ) Then
-                rng.Offset(i, eSD.SheetName - 1).Interior.Color = ccHidden
-            End If
-        Else
-            If IsInFirstColOf2DArray( _
-                    arrData(i, eSD.SeriesXSheet), _
-                    arrInvisibleSheets _
-            ) Then
-                Dim j As Long
-                For j = LBound(arrToMarkCells) To UBound(arrToMarkCells)
-                    Dim iCol As Long
-                    iCol = arrToMarkCells(j)
-                    
-                    rng.Offset(i, iCol - 1).Interior.Color = ccHidden
-                Next
-            End If
-        End If
+    Dim iRow As Long
+    For iRow = LBound(arrData) To UBound(arrData)
+        MarkSheetEntriesInCurrentRowIfSourceIsInvisible _
+                wkb, _
+                arrData, _
+                iRow, _
+                arrInvisibleSheets, _
+                rng
     Next
     
 End Sub
@@ -975,7 +945,122 @@ Private Function GetInvisibleSheetsArray( _
 End Function
 
 
-'TODO: also needed 'SeriesYSheet'?
+Private Sub MarkSheetEntriesInCurrentRowIfSourceIsInvisible( _
+    ByVal wkb As Workbook, _
+    ByVal arrData As Variant, _
+    ByVal iRow As Long, _
+    ByVal arrInvisibleSheets As Variant, _
+    ByVal rng As Range _
+)
+    
+    '==========================================================================
+    'which cells should be marked/tested
+    Dim arrInvisibleItems As Variant
+    arrInvisibleItems = Array( _
+            Array( _
+                eSD.SheetName _
+            ), _
+            Array( _
+                eSD.SeriesXSheet, _
+                eSD.SeriesXValues _
+            ), _
+            Array( _
+                eSD.SeriesYSheet, _
+                eSD.SeriesYValues _
+            ) _
+    )
+    '==========================================================================
+    
+    If IsInFirstColOf2DArray( _
+            arrData(iRow, arrInvisibleItems(1)(1)), _
+            arrInvisibleSheets _
+    ) Then
+        MarkSheetEntriesAsInvisible _
+                iRow, _
+                rng, _
+                arrInvisibleItems(1)
+    End If
+    
+    Dim i As Long
+    For i = LBound(arrInvisibleItems) + 1 To UBound(arrInvisibleItems)
+        'only do this for ranges on 'wkb'
+        If IsRangeInWkb(wkb, arrData, iRow, arrInvisibleItems(i)(1)) Then
+            If IsInFirstColOf2DArray( _
+                    arrData(iRow, arrInvisibleItems(i)(1)), _
+                    arrInvisibleSheets _
+            ) Then
+                MarkSheetEntriesAsInvisible _
+                        iRow, _
+                        rng, _
+                        arrInvisibleItems(i)
+            End If
+        End If
+    Next
+    
+End Sub
+
+
+Private Function IsInFirstColOf2DArray( _
+    ByVal sString As String, _
+    ByVal vArr As Variant _
+        ) As Boolean
+    
+    IsInFirstColOf2DArray = False
+    
+    Dim i As Long
+    For i = LBound(vArr) To UBound(vArr)
+        If vArr(i, 1) = sString Then
+            IsInFirstColOf2DArray = True
+            Exit Function
+        End If
+    Next
+    
+End Function
+
+
+Private Function IsRangeInWkb( _
+    ByVal wkb As Workbook, _
+    ByVal arrData As Variant, _
+    ByVal iRow As Long, _
+    ByVal eSheet As eSD _
+        ) As Boolean
+    
+    IsRangeInWkb = False
+    
+    If Len(arrData(iRow, eSheet - 2)) > 0 Then Exit Function
+    If Len(arrData(iRow, eSheet - 1)) > 0 Then
+        If arrData(iRow, eSheet - 1) <> wkb.Name Then Exit Function
+    Else
+        If Len(arrData(iRow, eSheet)) = 0 Then Exit Function
+    End If
+    
+    IsRangeInWkb = True
+    
+End Function
+
+
+Private Sub MarkSheetEntriesAsInvisible( _
+    ByVal iRow As Long, _
+    ByVal rng As Range, _
+    ByRef arrToMarkCells As Variant _
+)
+    
+    '==========================================================================
+    'color for stuff that is hidden/invisible (fully)
+    Const ccHidden As Long = 12040422            'R=230 G=184 B=183
+    '==========================================================================
+    
+    Dim j As Long
+    For j = LBound(arrToMarkCells) To UBound(arrToMarkCells)
+        Dim iCol As Long
+        iCol = arrToMarkCells(j)
+        
+        rng.Offset(iRow, iCol - 1).Interior.Color = ccHidden
+    Next
+    
+End Sub
+
+
 Private Sub MarkSeriesDataIfSourceIsHidden( _
     ByVal wkb As Workbook, _
     ByVal arrData As Variant _
@@ -1036,24 +1121,6 @@ Private Sub MarkSeriesDataIfSourceIsHidden( _
     Next
     
 End Sub
-
-
-Private Function IsInFirstColOf2DArray( _
-    ByVal sString As String, _
-    ByVal vArr As Variant _
-        ) As Boolean
-    
-    IsInFirstColOf2DArray = False
-    
-    Dim i As Long
-    For i = LBound(vArr) To UBound(vArr)
-        If vArr(i, 1) = sString Then
-            IsInFirstColOf2DArray = True
-            Exit Function
-        End If
-    Next
-    
-End Function
 
 
 Private Function IsRangeHidden( _
