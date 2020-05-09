@@ -68,7 +68,7 @@ Public Sub ListAllSCEntriesInAllCharts()
     Call PasteDataToCollectionSheet(wksSeriesLegend, arrData)
     
     If bAreSCsFound Then
-        Call MarkEachOddChartNumber(wksSeriesLegend)
+        Call MarkEachOddChartNumberRow(wksSeriesLegend)
         
         Call MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible(wkb, arrData, False)
         Call MarkSheetNameOrSeriesXYSheetIfSourceIsInvisible(wkb, arrData, True)
@@ -532,7 +532,7 @@ Private Sub AddHyperlinkToCurrentEntry( _
 End Sub
 
 
-Private Sub MarkEachOddChartNumber( _
+Private Sub MarkEachOddChartNumberRow( _
     ByVal wks As Worksheet _
 )
     
