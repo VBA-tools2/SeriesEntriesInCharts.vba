@@ -612,13 +612,16 @@ Private Function CountSCsInAllChartsInWorkbook( _
         For i = 1 To .Sheets.Count
             If IsChart(wkb, i) Then
                 Dim sc As Series
-                For Each sc In .Sheets(i).SeriesCollection
+                '(If you are on Excel 2010 or older, you will get a compile error.
+                ' Replace `FullSeriesCollection` by `SeriesCollection` in this
+                ' module.)
+                For Each sc In .Sheets(i).FullSeriesCollection
                     j = j + 1
                 Next
             Else
                 Dim crt As ChartObject
                 For Each crt In .Sheets(i).ChartObjects
-                    For Each sc In crt.Chart.SeriesCollection
+                    For Each sc In crt.Chart.FullSeriesCollection
                         j = j + 1
                     Next
                 Next
@@ -826,12 +829,15 @@ Private Sub FillArrayWithSCData( _
         End If
         
         Dim iSC As Long
-        For iSC = 1 To .SeriesCollection.Count
+        For iSC = 1 To .FullSeriesCollection.Count
+            Dim srs As Series
+            Set srs = .FullSeriesCollection(iSC)
+            
             arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
-            arrData(iSCTotal, eSD.SeriesName) = cha.SeriesCollection(iSC).Name
+            arrData(iSCTotal, eSD.SeriesName) = srs.Name
             
             Dim MySeries As IChartSeries
-            Set MySeries = ChartSeries.Create(.SeriesCollection(iSC))
+            Set MySeries = ChartSeries.Create(srs)
             
             FillArrayWithSCDataCurrentSeries _
                     wkb, _
@@ -839,8 +845,8 @@ Private Sub FillArrayWithSCData( _
                     MySeries, _
                     arrData
             
-            arrData(iSCTotal, eSD.AxisGroup) = .SeriesCollection(iSC).AxisGroup
-            arrData(iSCTotal, eSD.PlotOrder) = .SeriesCollection(iSC).PlotOrder
+            arrData(iSCTotal, eSD.AxisGroup) = srs.AxisGroup
+            arrData(iSCTotal, eSD.PlotOrder) = srs.PlotOrder
             
             iSCTotal = iSCTotal + 1
         Next
