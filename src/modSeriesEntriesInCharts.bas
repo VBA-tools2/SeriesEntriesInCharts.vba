@@ -590,6 +590,9 @@ Private Sub StuffToBeDoneLast( _
 '        'optionally the group level can be changed that all are closed
 '        wks.Outline.ShowLevels RowLevels:=0, ColumnLevels:=1
     End If
+    
+'    wks.UsedRange.WrapText = False
+    
 End Sub
 
 
