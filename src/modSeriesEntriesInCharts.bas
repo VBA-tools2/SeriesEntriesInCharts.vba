@@ -574,10 +574,7 @@ Private Sub StuffToBeDoneLast( _
     'do it only if the sheet was newly created
     If bNewSheet = True Then
         With wks
-            'set 'AutoFilter' and 'AutoFit'
             .Rows(gciTitleRow).AutoFilter
-            
-            ''AutoFit' the 'UsedRange'
             .UsedRange.EntireColumn.AutoFit
         End With
         
