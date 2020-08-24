@@ -385,6 +385,7 @@ Private Sub AddLabelToCell( _
     
     With shp
         .Name = csNamePrefix & wks.Cells(rng.Row, 1)
+        .Placement = xlMoveAndSize
         .OnAction = "GotoChartWithCellName"
     End With
     
