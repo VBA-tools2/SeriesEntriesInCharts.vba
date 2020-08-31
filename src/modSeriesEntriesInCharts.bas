@@ -643,7 +643,7 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
     arrHeading = TransferHeadingNamesToArray
     
     Dim wks As Worksheet
-    Set wks = wkb.Worksheets.Add(, wkb.Worksheets(wkb.Worksheets.Count))
+    Set wks = wkb.Worksheets.Add(wkb.Worksheets(1))
     
     '"configure" the new sheet
     With wks
