@@ -64,6 +64,13 @@ Public Sub ListAllSCEntriesInAllCharts()
     Dim wksSeriesLegend As Worksheet
     Set wksSeriesLegend = wkb.Worksheets(pcsLegendSheetName)
     
+    If Not bNewSeriesSheet Then
+        Dim AFStorage As IAutoFilterStorage
+        Set AFStorage = AutoFilterStorage.Create(wksSeriesLegend)
+        AFStorage.StoreFilters
+        AFStorage.AutoFilterMode = False
+    End If
+    
     Call PasteDataToCollectionSheet(wksSeriesLegend, arrData)
     
     If bAreSCsFound Then
@@ -86,6 +93,10 @@ Public Sub ListAllSCEntriesInAllCharts()
         Call ApplyExtensions(wksSeriesLegend, bNewSeriesSheet, arrData)
         
         Call StuffToBeDoneLast(wksSeriesLegend, bNewSeriesSheet)
+        
+        If Not bNewSeriesSheet Then
+            AFStorage.RestoreFilters
+        End If
     End If
     
 TidyUp:
