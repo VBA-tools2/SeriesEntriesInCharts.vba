@@ -445,6 +445,9 @@ Private Sub AddHyperlinksToSeriesData( _
             eSD.SeriesYValues - 1 _
     )
     
+    Dim CurrentChart As Chart
+    Set CurrentChart = RememberActiveChartAndActivateGivenWorksheet(wks)
+    
     Dim i As Long
     For i = 0 To iNoOfEntries - 1
         Dim j As Long
@@ -462,6 +465,8 @@ Private Sub AddHyperlinksToSeriesData( _
                     rng
         Next
     Next
+    
+    If Not CurrentChart Is Nothing Then CurrentChart.Activate
     
 End Sub
 
