@@ -20,15 +20,14 @@ Public Sub CollectAllHiddenStuffOnSheets( _
     ByVal wkb As Workbook _
 )
     
-    Dim wks As Worksheet
-    Dim arrInvisibleSheets As Variant
-    Dim arrHiddenRanges As Variant
-    
-    
     If DoesHiddenStuffSheetAlreadyExist(wkb) Then Exit Sub
+    
+    Dim wks As Worksheet
     Set wks = AddHiddenStuffSheetAndInitialize(wkb)
     
+    Dim arrInvisibleSheets As Variant
     arrInvisibleSheets = CollectInvisibleSheets(wkb)
+    
     If modArraySupport2.IsArrayAllocated(arrInvisibleSheets) Then
         wks.Cells(1, 1).Resize( _
                 UBound(arrInvisibleSheets, 1), _
@@ -36,7 +35,9 @@ Public Sub CollectAllHiddenStuffOnSheets( _
         ) = arrInvisibleSheets
     End If
     
+    Dim arrHiddenRanges As Variant
     arrHiddenRanges = CollectHiddenRanges(wkb)
+    
     If modArraySupport2.IsArrayAllocated(arrHiddenRanges) Then
         wks.Cells(1, 4).Resize( _
                 UBound(arrHiddenRanges, 1), _
@@ -51,12 +52,11 @@ Private Function DoesHiddenStuffSheetAlreadyExist( _
     ByVal wkb As Workbook _
         ) As Boolean
     
-    Dim wks As Worksheet
-    
-    
     On Error Resume Next
+    Dim wks As Worksheet
     Set wks = wkb.Worksheets(gcsHiddenSheetName)
     On Error GoTo 0
+    
     DoesHiddenStuffSheetAlreadyExist = (Not wks Is Nothing)
     
 End Function
@@ -66,13 +66,13 @@ Private Function AddHiddenStuffSheetAndInitialize( _
     ByVal wkb As Workbook _
         ) As Worksheet
     
-    Dim wks As Worksheet
     Dim sActiveSheetName As String
-    
-    
     sActiveSheetName = ActiveSheet.Name
+    
+    Dim wks As Worksheet
     Set wks = wkb.Worksheets.Add(, wkb.Worksheets(wkb.Worksheets.Count))
     wkb.Sheets(sActiveSheetName).Activate
+    
     With wks
         .Name = gcsHiddenSheetName
         .Tab.ThemeColor = xlThemeColorLight1
@@ -93,15 +93,13 @@ Private Function CollectInvisibleSheets( _
     ByVal wkb As Workbook _
         ) As Variant
     
-    Dim i As Long
-    Dim iHidden As Long
     Dim Arr As Variant
-    Dim arrTransposed() As Variant
-    Dim bOK As Boolean
-    
-    
     ReDim Arr(1 To 2, 1 To wkb.Sheets.Count)
+    
+    Dim iHidden As Long
     iHidden = 0
+    
+    Dim i As Long
     For i = 1 To wkb.Sheets.Count
         With wkb.Sheets(i)
             If .Visible <> xlSheetVisible Then
@@ -114,6 +112,9 @@ Private Function CollectInvisibleSheets( _
     
     If iHidden > 0 Then
         ReDim Preserve Arr(1 To 2, 1 To iHidden)
+        
+        Dim bOK As Boolean
+        Dim arrTransposed() As Variant
         bOK = modArraySupport2.TransposeArray(Arr, arrTransposed)
     End If
     
@@ -126,19 +127,18 @@ Private Function CollectHiddenRanges( _
     ByVal wkb As Workbook _
         ) As Variant
     
-    Dim ws As Worksheet
     Dim Arr As Variant
-    Dim arrTransposed() As Variant
-    Dim sHiddenRows As String
-    Dim sHiddenColumns As String
-    Dim iHidden As Long
-    Dim bOK As Boolean
-    
-    
     ReDim Arr(1 To 3, 1 To wkb.Worksheets.Count)
+    
+    Dim iHidden As Long
     iHidden = 0
+    
+    Dim ws As Worksheet
     For Each ws In wkb.Worksheets
+        Dim sHiddenRows As String
         sHiddenRows = vbNullString
+        
+        Dim sHiddenColumns As String
         sHiddenColumns = vbNullString
         
         sHiddenRows = HiddenRowsInSheet(ws)
@@ -154,6 +154,9 @@ Private Function CollectHiddenRanges( _
     
     If iHidden > 0 Then
         ReDim Preserve Arr(1 To 3, 1 To iHidden)
+        
+        Dim bOK As Boolean
+        Dim arrTransposed() As Variant
         bOK = modArraySupport2.TransposeArray(Arr, arrTransposed)
     End If
     
@@ -169,9 +172,8 @@ Public Sub MakeAllStuffVisibleHidden( _
 )
     
     Dim wks As Worksheet
-    
-    
     Set wks = wkb.Worksheets(gcsHiddenSheetName)
+    
     Call MakeSheetsVisibleHidden(wks, bMakeHidden)
     Call MakeRangesVisibleHidden(wks, bMakeHidden)
     
@@ -189,20 +191,19 @@ Private Sub MakeSheetsVisibleHidden( _
     Optional ByVal bMakeHidden As Boolean = False _
 )
     
-    Dim wkb As Workbook
     Dim rng As Range
-    Dim Arr As Variant
-    Dim i As Long
-    
-    
     Set rng = wks.Range(gcsInvisibleSheetsRange)
     If rng.Value = vbNullString Then Exit Sub
     
+    Dim Arr As Variant
     Arr = rng.CurrentRegion
+    
+    Dim wkb As Workbook
     Set wkb = wks.Parent
     
     With wkb
         If Not bMakeHidden Then
+            Dim i As Long
             For i = 1 To UBound(Arr)
                 .Sheets(Arr(i, 1)).Visible = xlSheetVisible
             Next
@@ -221,30 +222,32 @@ Private Sub MakeRangesVisibleHidden( _
     Optional ByVal bMakeHidden As Boolean = False _
 )
     
-    Dim wkb As Workbook
-    Dim wks As Worksheet
     Dim rngHiddenRanges As Range
-    Dim arrHiddenRanges As Variant
-    Dim Arr As Variant
-    Dim i As Long
-    Dim j As Long
-    
-    
     Set rngHiddenRanges = wksHiddenStuff.Range(gcsHiddenRangesRange)
     If rngHiddenRanges.Value = vbNullString Then Exit Sub
     
     'resize to avoid error in case only rows are hidden
+    Dim arrHiddenRanges As Variant
     arrHiddenRanges = rngHiddenRanges.CurrentRegion.Resize(, 3)
+    
+    Dim wkb As Workbook
     Set wkb = wksHiddenStuff.Parent
     
+    Dim i As Long
     For i = 1 To UBound(arrHiddenRanges)
+        Dim wks As Worksheet
         Set wks = wkb.Worksheets(arrHiddenRanges(i, 1))
+        
         If Len(arrHiddenRanges(i, 2)) > 0 Then
+            Dim Arr As Variant
             Arr = Split(arrHiddenRanges(i, 2), ",")
+            
+            Dim j As Long
             For j = LBound(Arr) To UBound(Arr)
                 wks.Rows(Arr(j)).Hidden = bMakeHidden
             Next
         End If
+        
         If Len(arrHiddenRanges(i, 3)) > 0 Then
             Arr = Split(arrHiddenRanges(i, 3), ",")
             For j = LBound(Arr) To UBound(Arr)
