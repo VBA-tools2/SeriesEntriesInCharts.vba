@@ -160,10 +160,14 @@ Private Function CollectSCData( _
                     iChartNumber _
             )
         Else
-            Dim crt As ChartObject
-            For Each crt In wkb.Sheets(iSheetIndex).ChartObjects
+            Dim iChartObjectIndex As Long
+            For iChartObjectIndex = 1 To wkb.Sheets(iSheetIndex).ChartObjects.Count
                 iChartNumber = iChartNumber + 1
+                
+                Dim crt As ChartObject
+                Set crt = wkb.Sheets(iSheetIndex).ChartObjects(iChartObjectIndex)
                 Set cha = crt.Chart
+                
                 Call FillArrayWithSCData( _
                         wkb, _
                         cha, _
@@ -306,19 +310,17 @@ Private Sub ChangeColorOfRepeatingSheetChartNames( _
     Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
     
     Dim ChartNumber As Long
-    ChartNumber = 1
-    
-    Dim SheetName As String
-    SheetName = arrData(LBound(arrData), eSD.SheetName)
-    
-    Dim ChartName As String
-    ChartName = arrData(LBound(arrData), eSD.ChartName)
+    ChartNumber = 0
     
     Dim i As Long
-    For i = LBound(arrData) + 1 To UBound(arrData)
+    For i = LBound(arrData) To UBound(arrData)
         If arrData(i, eSD.ChartNumber) <> ChartNumber Then
             ChartNumber = arrData(i, eSD.ChartNumber)
+            
+            Dim SheetName As String
             SheetName = arrData(i, eSD.SheetName)
+            
+            Dim ChartName As String
             ChartName = arrData(i, eSD.ChartName)
         Else
             With rng.Offset(i, eSD.SheetName - 1).Font
@@ -365,21 +367,45 @@ Private Sub AddHyperlinksToChartName( _
     Dim CurrentChart As Chart
     Set CurrentChart = RememberActiveChartAndActivateGivenWorksheet(wks)
     
+    Dim iPreviousChartNumber As Long
+    iPreviousChartNumber = 0
+    
+    Dim sPreviousSheetName As String
+    sPreviousSheetName = vbNullString
+    
     Dim i As Long
     For i = 0 To iNoOfEntries - 1
-        Dim sChartName As String
-        sChartName = rngSeriesData.Offset(i, eSD.ChartName - 1).Value
+        Dim iActualChartNumber As Long
+        iActualChartNumber = rngSeriesData.Offset(i, eSD.ChartNumber - 1).Value2
+        
+        If iActualChartNumber <> iPreviousChartNumber Then
+            iPreviousChartNumber = iActualChartNumber
+            
+            Dim sDataSheet As String
+            sDataSheet = rngSeriesData.Offset(i, eSD.SheetName - 1).Value
+            
+            Dim sChartName As String
+            sChartName = rngSeriesData.Offset(i, eSD.ChartName - 1).Value
+            
+            If Len(sChartName) > 0 Then
+                If sDataSheet <> sPreviousSheetName Then
+                    sPreviousSheetName = sDataSheet
+                    
+                    Dim ChartObjectIndex As Long
+                    ChartObjectIndex = 1
+                Else
+                    ChartObjectIndex = ChartObjectIndex + 1
+                End If
+            End If
+        End If
         
         If Len(sChartName) > 0 Then
             Dim rng As Range
             Set rng = rngSeriesData.Offset(i, eSD.ChartName - 1)
             
-            Dim sDataSheet As String
-            sDataSheet = rngSeriesData.Offset(i, eSD.SheetName - 1).Value
-            
             Dim sTopLeftCell As String
             sTopLeftCell = wkb.Worksheets(sDataSheet). _
-                    ChartObjects(sChartName).TopLeftCell.Address(False, False)
+                    ChartObjects(ChartObjectIndex).TopLeftCell.Address(False, False)
             
             Dim sHyperlinkTarget As String
             sHyperlinkTarget = "'" & sDataSheet & "'!" & sTopLeftCell
