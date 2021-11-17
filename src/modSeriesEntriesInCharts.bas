@@ -57,6 +57,8 @@ Public Sub ListAllSCEntriesInAllCharts()
     Dim arrData As Variant
     bAreSCsFound = CollectSCData(wkb, arrData)
     
+    Call RepeatSheetAndChartNames(arrData)
+    
     'store if the sheet was newly added/created
     Dim bNewSeriesSheet As Boolean
     bNewSeriesSheet = WasSeriesEntriesInChartsWorksheetCreatedAndInitialized(wkb)
@@ -84,6 +86,9 @@ Public Sub ListAllSCEntriesInAllCharts()
     
     If bAreSCsFound Then
         Call AddHyperlinksToChartName(wksSeriesLegend)
+        'needs to be done after `AddHyperlinksToChartName`
+        'otherwise colors will be overwritten (again)
+        Call ChangeColorOfRepeatingSheetChartNames(wksSeriesLegend, arrData)
         Call AddButtonsThatHyperlinkToCharts(wksSeriesLegend)
         Call AddHyperlinksToSeriesData(wksSeriesLegend)
         
@@ -176,6 +181,29 @@ Private Function CollectSCData( _
 End Function
 
 
+Private Sub RepeatSheetAndChartNames( _
+    ByRef arrData As Variant _
+)
+    
+    Dim i As Long
+    For i = LBound(arrData) To UBound(arrData)
+        If Len(arrData(i, eSD.SheetName)) > 0 Then
+            Dim SheetName As String
+            SheetName = arrData(i, eSD.SheetName)
+            
+            Dim ChartName As String
+            ChartName = arrData(i, eSD.ChartName)
+        Else
+            arrData(i, eSD.SheetName) = SheetName
+            If Len(ChartName) > 0 Then
+                arrData(i, eSD.ChartName) = ChartName
+            End If
+        End If
+    Next
+    
+End Sub
+
+
 Private Function WasSeriesEntriesInChartsWorksheetCreatedAndInitialized( _
     ByVal wkb As Workbook _
         ) As Boolean
@@ -260,6 +288,54 @@ Private Sub PasteDataToCollectionSheet( _
                     Chr$(34) & " / " & Chr$(34) & ",COUNTA(" & sRange & "))"
         Next
     End With
+    
+End Sub
+
+
+Private Sub ChangeColorOfRepeatingSheetChartNames( _
+    ByVal wksSeriesLegend As Worksheet, _
+    ByVal arrData As Variant _
+)
+    
+    '==========================================================================
+    'color for repeating entries
+    Const ccNotEqual As Long = 255            'R=255 G=0 B=0
+    '==========================================================================
+    
+    Dim rng As Range
+    Set rng = wksSeriesLegend.Cells(gciTitleRow, 1)
+    
+    Dim ChartNumber As Long
+    ChartNumber = 1
+    
+    Dim SheetName As String
+    SheetName = arrData(LBound(arrData), eSD.SheetName)
+    
+    Dim ChartName As String
+    ChartName = arrData(LBound(arrData), eSD.ChartName)
+    
+    Dim i As Long
+    For i = LBound(arrData) + 1 To UBound(arrData)
+        If arrData(i, eSD.ChartNumber) <> ChartNumber Then
+            ChartNumber = arrData(i, eSD.ChartNumber)
+            SheetName = arrData(i, eSD.SheetName)
+            ChartName = arrData(i, eSD.ChartName)
+        Else
+            With rng.Offset(i, eSD.SheetName - 1).Font
+                'font color
+                .ThemeColor = xlThemeColorDark1
+                .TintAndShade = -0.5
+            End With
+            
+            With rng.Offset(i, eSD.ChartName - 1).Font
+                If Len(ChartName) > 0 Then
+                    'font color
+                    .ThemeColor = xlThemeColorDark1
+                    .TintAndShade = -0.5
+                End If
+            End With
+        End If
+    Next
     
 End Sub
 
