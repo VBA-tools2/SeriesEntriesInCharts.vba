@@ -1461,7 +1461,10 @@ Private Function AreRowsOrColsEqual( _
         ) As Boolean
     
     'if one of the ranges is not a range, no test is needed
-    If Left$(sXRange, 1) = "{" Or Left$(sYRange, 1) = "{" Then Exit Function
+    If Left$(sXRange, 1) = "{" Or Left$(sYRange, 1) = "{" Then
+        AreRowsOrColsEqual = True
+        Exit Function
+    End If
     
     Dim bAreRowsEqual As Boolean
     bAreRowsEqual = (ExtractRowsRange(sXRange) = ExtractRowsRange(sYRange))
