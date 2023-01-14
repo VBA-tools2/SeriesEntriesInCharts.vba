@@ -57,25 +57,25 @@ Public Sub ListAllSCEntriesInAllCharts()
     Dim arrData As Variant
     bAreSCsFound = CollectSCData(wkb, arrData)
     
-    Call RepeatSheetAndChartNames(arrData)
-    
-    'store if the sheet was newly added/created
-    Dim bNewSeriesSheet As Boolean
-    bNewSeriesSheet = WasSeriesEntriesInChartsWorksheetCreatedAndInitialized(wkb)
-    
-    Dim wksSeriesLegend As Worksheet
-    Set wksSeriesLegend = wkb.Worksheets(pcsLegendSheetName)
-    
-    If Not bNewSeriesSheet Then
-        Dim AFStorage As IAutoFilterStorage
-        Set AFStorage = AutoFilterStorage.Create(wksSeriesLegend)
-        AFStorage.StoreFilters
-        AFStorage.AutoFilterMode = False
-    End If
-    
-    Call PasteDataToCollectionSheet(wksSeriesLegend, arrData)
-    
     If bAreSCsFound Then
+        Call RepeatSheetAndChartNames(arrData)
+        
+        'store if the sheet was newly added/created
+        Dim bNewSeriesSheet As Boolean
+        bNewSeriesSheet = WasSeriesEntriesInChartsWorksheetCreatedAndInitialized(wkb)
+        
+        Dim wksSeriesLegend As Worksheet
+        Set wksSeriesLegend = wkb.Worksheets(pcsLegendSheetName)
+        
+        If Not bNewSeriesSheet Then
+            Dim AFStorage As IAutoFilterStorage
+            Set AFStorage = AutoFilterStorage.Create(wksSeriesLegend)
+            AFStorage.StoreFilters
+            AFStorage.AutoFilterMode = False
+        End If
+        
+        Call PasteDataToCollectionSheet(wksSeriesLegend, arrData)
+        
         Call MarkEachOddChartNumberRow(wksSeriesLegend)
         
         Call MarkSheetEntriesIfSourceIsInvisible(wkb, arrData)
