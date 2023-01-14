@@ -104,7 +104,7 @@ Public Sub ListAllSCEntriesInAllCharts()
         End If
     End If
     
-TidyUp:
+tidyUp:
     SpeedUp.TurnOff
     Set SpeedUp = Nothing
     
