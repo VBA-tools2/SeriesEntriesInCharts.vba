@@ -75,6 +75,7 @@ Public Sub ListAllSCEntriesInAllCharts()
         End If
         
         Call PasteDataToCollectionSheet(wksSeriesLegend, arrData)
+        Call ShowStartingQuotesInBookNames(wksSeriesLegend)
         
         Call MarkEachOddChartNumberRow(wksSeriesLegend)
         
@@ -292,6 +293,40 @@ Private Sub PasteDataToCollectionSheet( _
                     Chr$(34) & " / " & Chr$(34) & ",COUNTA(" & sRange & "))"
         Next
     End With
+    
+End Sub
+
+
+Private Sub ShowStartingQuotesInBookNames( _
+    ByVal wks As Worksheet _
+)
+    
+    Dim rngSeriesData As Range
+    Set rngSeriesData = wks.Cells(gciTitleRow + 1, 1)
+    
+    Dim iNoOfEntries As Long
+    iNoOfEntries = NoOfEntriesInList(rngSeriesData)
+    
+    Dim arrBooks As Variant
+    arrBooks = Array( _
+            eSD.SeriesXBook - 1, _
+            eSD.SeriesYBook - 1 _
+    )
+    
+    Dim i As Long
+    For i = 0 To iNoOfEntries - 1
+        Dim j As Long
+        For j = LBound(arrBooks) To UBound(arrBooks)
+            Dim rng As Range
+            Set rng = rngSeriesData.Offset(i, arrBooks(j))
+            
+            With rng
+                If .PrefixCharacter = "'" Then
+                    .Value2 = "''" & .Value2
+                End If
+            End With
+        Next
+    Next
     
 End Sub
 
