@@ -1455,9 +1455,13 @@ Private Sub MarkSeriesSheetIfXYValuesAreOnDifferentSheets( _
     
     Dim i As Long
     For i = LBound(arrData) To UBound(arrData)
-        If arrData(i, eSD.SeriesXSheet) <> arrData(i, eSD.SeriesYSheet) Then
-            rng.Offset(i, eSD.SeriesXSheet - 1).Font.Color = ccNotEqual
-            rng.Offset(i, eSD.SeriesYSheet - 1).Font.Color = ccNotEqual
+        If Not IsEmpty(arrData(i, eSD.SeriesXSheet)) Then
+            If Not IsEmpty(arrData(i, eSD.SeriesYSheet)) Then
+                If arrData(i, eSD.SeriesXSheet) <> arrData(i, eSD.SeriesYSheet) Then
+                    rng.Offset(i, eSD.SeriesXSheet - 1).Font.Color = ccNotEqual
+                    rng.Offset(i, eSD.SeriesYSheet - 1).Font.Color = ccNotEqual
+                End If
+            End If
         End If
     Next
     
