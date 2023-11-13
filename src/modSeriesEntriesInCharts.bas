@@ -125,6 +125,9 @@ Private Function CollectSCData( _
     Dim NoOfAllSCsInAllChartsInWorkbook As Long
     NoOfAllSCsInAllChartsInWorkbook = CountSCsInAllChartsInWorkbook(wkb)
     
+    Dim NoOfChartsWithoutSeriesInWorkbook As Long
+    NoOfChartsWithoutSeriesInWorkbook = CountChartsWithoutSeriesInWorkbook(wkb)
+    
     If NoOfAllSCsInAllChartsInWorkbook = 0 Then
         MsgBox ("There are no Charts (with readable SeriesCollections) in " & _
                 "this Workbook.")
@@ -136,7 +139,7 @@ Private Function CollectSCData( _
     ' 'arrHeading' (+1 because 'arrHeading' is zero based))
     Dim arrHeading As Variant
     arrHeading = TransferHeadingNamesToArray
-    ReDim arrData(1 To NoOfAllSCsInAllChartsInWorkbook, 1 To UBound(arrHeading) + 1)
+    ReDim arrData(1 To NoOfAllSCsInAllChartsInWorkbook + NoOfChartsWithoutSeriesInWorkbook, 1 To UBound(arrHeading) + 1)
     Erase arrHeading
     
     'fill the array
@@ -788,6 +791,40 @@ Private Function CountSCsInAllChartsInWorkbook( _
 End Function
 
 
+Private Function CountChartsWithoutSeriesInWorkbook( _
+    ByVal wkb As Workbook _
+        ) As Long
+    
+    'just count the number of entries for the array first for all
+    Dim j As Long
+    j = 0
+    
+    With wkb
+        'it gets a bit complicated, because charts can occur as
+        '- dedicated "Chart" sheets and
+        '- as "ChartObjects" on normal WorkSheets
+        Dim i As Long
+        For i = 1 To .Sheets.Count
+            If IsChart(wkb, i) Then
+                If .Sheets(i).FullSeriesCollection.Count = 0 Then
+                    j = j + 1
+                End If
+            Else
+                Dim crt As ChartObject
+                For Each crt In .Sheets(i).ChartObjects
+                    If crt.Chart.FullSeriesCollection.Count = 0 Then
+                        j = j + 1
+                    End If
+                Next
+            End If
+        Next
+    End With
+    
+    CountChartsWithoutSeriesInWorkbook = j
+    
+End Function
+
+
 Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
     ByVal wkb As Workbook _
 )
@@ -982,28 +1019,36 @@ Private Sub FillArrayWithSCData( _
             End If
         End If
         
-        Dim iSC As Long
-        For iSC = 1 To .FullSeriesCollection.Count
-            Dim srs As Series
-            Set srs = .FullSeriesCollection(iSC)
-            
+        Dim iSeriesCount As Long
+        iSeriesCount = .FullSeriesCollection.Count
+        
+        If iSeriesCount = 0 Then
             arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
-            arrData(iSCTotal, eSD.SeriesName) = srs.Name
-            
-            Dim MySeries As IChartSeries
-            Set MySeries = ChartSeries.Create(srs)
-            
-            FillArrayWithSCDataCurrentSeries _
-                    wkb, _
-                    iSCTotal, _
-                    MySeries, _
-                    arrData
-            
-            arrData(iSCTotal, eSD.AxisGroup) = srs.AxisGroup
-            arrData(iSCTotal, eSD.PlotOrder) = srs.PlotOrder
-            
             iSCTotal = iSCTotal + 1
-        Next
+        Else
+            Dim iSC As Long
+            For iSC = 1 To iSeriesCount
+                Dim srs As Series
+                Set srs = .FullSeriesCollection(iSC)
+                
+                arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
+                arrData(iSCTotal, eSD.SeriesName) = srs.Name
+                
+                Dim MySeries As IChartSeries
+                Set MySeries = ChartSeries.Create(srs)
+                
+                FillArrayWithSCDataCurrentSeries _
+                        wkb, _
+                        iSCTotal, _
+                        MySeries, _
+                        arrData
+                
+                arrData(iSCTotal, eSD.AxisGroup) = srs.AxisGroup
+                arrData(iSCTotal, eSD.PlotOrder) = srs.PlotOrder
+                
+                iSCTotal = iSCTotal + 1
+            Next
+        End If
     End With
 End Sub
 
