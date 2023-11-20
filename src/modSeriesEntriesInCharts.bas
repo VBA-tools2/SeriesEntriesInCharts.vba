@@ -15,7 +15,11 @@ Public Enum eSD
     XLabel
     YLabel
     Y2Label
-    SeriesName
+    SeriesNamePath
+    SeriesNameBook
+    SeriesNameSheet
+    SeriesNameRange
+    SeriesNameValue
     SeriesXPath
     SeriesXBook
     SeriesXSheet
@@ -269,7 +273,11 @@ Private Sub PasteDataToCollectionSheet( _
     'unique entries in a number of total entries
     Dim arrStatisticFormulae As Variant
     arrStatisticFormulae = Array( _
-            eSD.SeriesName, _
+            eSD.SeriesNamePath, _
+            eSD.SeriesNameBook, _
+            eSD.SeriesNameSheet, _
+            eSD.SeriesNameRange, _
+            eSD.SeriesNameValue, _
             eSD.SeriesXPath, _
             eSD.SeriesXBook, _
             eSD.SeriesXSheet, _
@@ -867,6 +875,10 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
         'add groups to some columns
         .Columns(eSD.ChartName).Group
         .Columns(eSD.Y2Label).Group
+        .Columns(eSD.SeriesNamePath).Group
+        .Columns(eSD.SeriesNameBook).Group
+        .Columns(eSD.SeriesNameSheet).Group
+        .Columns(eSD.SeriesNameRange).Group
         .Columns(eSD.SeriesXPath).Group
         .Columns(eSD.SeriesXBook).Group
         .Columns(eSD.SeriesXSheet).Group
@@ -925,6 +937,10 @@ Private Function TransferHeadingNamesToArray() As Variant
             "x axis" & csStringSep & _
             "y axis" & csStringSep & _
             "y axis 2" & csStringSep & _
+            "Series.Name.Path" & csStringSep & _
+            "Series.Name.Book" & csStringSep & _
+            "Series.Name.Sheet" & csStringSep & _
+            "Series.Name.Range" & csStringSep & _
             "Series.Name" & csStringSep & _
             "Series.X.Path" & csStringSep & _
             "Series.X.Book" & csStringSep & _
@@ -1032,7 +1048,7 @@ Private Sub FillArrayWithSCData( _
                 Set srs = .FullSeriesCollection(iSC)
                 
                 arrData(iSCTotal, eSD.ChartNumber) = iChartNumber
-                arrData(iSCTotal, eSD.SeriesName) = srs.Name
+                arrData(iSCTotal, eSD.SeriesNameValue) = srs.Name
                 
                 Dim MySeries As IChartSeries
                 Set MySeries = ChartSeries.Create(srs)
@@ -1061,8 +1077,21 @@ Private Sub FillArrayWithSCDataCurrentSeries( _
 )
     
     With MySeries
-'        arrData(iSCTotal, eSD.SeriesName) = .SeriesName
+'        arrData(iSCTotal, eSD.SeriesNameValue) = .SeriesName
         If .IsSeriesAccessible Then
+            With .SeriesName
+                If .IsRange Then
+                    If Len(.RangePath) > 0 Then
+                        arrData(iSCTotal, eSD.SeriesNamePath) = .RangePath
+                        arrData(iSCTotal, eSD.SeriesNameBook) = .RangeBook
+                    ElseIf .RangeBook <> wkb.Name Or Len(.RangeSheet) = 0 Then
+                        arrData(iSCTotal, eSD.SeriesNameBook) = .RangeBook
+                    End If
+                    arrData(iSCTotal, eSD.SeriesNameSheet) = .RangeSheet
+                    arrData(iSCTotal, eSD.SeriesNameRange) = .RangeString
+                End If
+            End With
+            
             With .XValues
                 If Not .IsRange Then
                     arrData(iSCTotal, eSD.SeriesXValues) = .FormulaPart
