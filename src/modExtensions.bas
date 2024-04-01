@@ -11,6 +11,6 @@ Public Sub ApplyExtensions( _
     ByVal arrData As Variant _
 )
     
-    'add additional subs here which can tell you *what* series data are plotted
+    AddSeriesMarkerFormatting wksSeriesLegend
     
 End Sub
