@@ -1062,6 +1062,11 @@ Private Sub FillArrayWithSCData( _
                 arrData(iSCTotal, eSD.AxisGroup) = srs.AxisGroup
                 arrData(iSCTotal, eSD.PlotOrder) = srs.PlotOrder
                 
+                'if 'srs' is inaccessible
+                If Len(arrData(iSCTotal, eSD.PlotOrderTotal)) = 0 Then
+                    arrData(iSCTotal, eSD.PlotOrderTotal) = iSC
+                End If
+                
                 iSCTotal = iSCTotal + 1
             Next
         End If
