@@ -1,0 +1,149 @@
+
+= SeriesEntriesInCharts.vba
+:experimental:
+:icons:         // not sure if this is needed
+:sourcedir: ../src
+:testdir: ../tests
+:uri-ChartSeries: https://github.com/VBA-tools2/ChartSeries.vba
+:uri-commit-messages: https://www.conventionalcommits.org
+:uri-GitHub-FirstContribution: https://github.com/firstcontributions/first-contributions
+:uri-license: https://choosealicense.com/licenses/mit/
+:uri-modArraySupport2: https://github.com/VBA-tools2/modArraySupport2.vba
+:uri-rubberduck: https://rubberduckvba.com/
+:uri-UnitTests: https://en.wikipedia.org/wiki/Unit_testing
+:uri-XLSpeedUp: https://github.com/VBA-tools2/XLSpeedUp.vba
+// show the corresponding icons on GitHub, because otherwise "just" the text will be shown
+ifdef::env-github[]
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :information_source:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+Excel VBA module to list chart + (accessible) series data.
+
+You have Excel files with a lot of charts and don't have clue which data are (really) plotted?
+To answer this question this project is good for.
+
+
+== Features
+
+List
+
+* the sheet name,
+* chart name,
+* chart title, x/y/y2 axis labels,
+* series name strings and, if it is a range, its path, workbook, worksheet and range,
+* series x values, or, if it is a range, its path, workbook, worksheet and range,
+* series y values, or, if it is a range, its path, workbook, worksheet and range,
+* the axis group, and
+* the "`visible`" and total plot order
+
+of each series in the active workbook.
+
+Additionally you can write extensions.
+The only (public) so far is `modSeriesFormatting` which lists the marker
+
+* symbol,
+* foreground color, and
+* background color
+
+of scatter (like) series.
+
+[#prerequisites]
+== Prerequisites / Dependencies
+
+Since this is an Excel VBA module you obviously need Microsoft Excel.
+You also need the following classes/modules:
+
+* {uri-ChartSeries}[ChartSeries.vba]
+* {uri-modArraySupport2}[modArraySupport2.vba]
+* {uri-XLSpeedUp}[XLSpeedUp.vba]
+
+[#how-to-install]
+== How to install / Getting started
+
+Add the CLS and BAS files from the link:{sourcedir}[src] folder to your project.
+(Of course you have to follow the installation instructions for the <<prerequisites>> as well.)
+Since you can use this tool for any workbook, it makes sense to put it in an AddIn.
+
+._If you need some more advice on how to do that, expand me._
+[%collapsible]
+====
+. Open Microsoft Excel.
+. Open the Visual Basic Editor (VBE) (kbd:[Alt+F11]).
+. Add the file(s) in the link:{sourcedir}[src] folder to your VBA project.
+** With {uri-rubberduck}[Rubberduck]:
+.. Right-click on the project to which you want to add the file(s) in the "`Code Explorer`" (to show it press kbd:[Ctrl+R]) and click on menu:Add[Existing Files...].
+.. Select all files in the link:{sourcedir}[src] folder and click on btn:[Open].
+** Without Rubberduck:
+.. Select all files in the link:{sourcedir}[src] folder in Windows File Explorer.
+.. Drag-and-drop them to the corresponding project in VBE's "`Project Explorer`". +
+   (To show it press kbd:[Ctrl+R].
+   Hit it twice if the Code Explorer shows up first.)
+// BUG: "project name" can't be put in normal angle brackets, because the closing bracket would be interpreted as menu delimiter. I couldn't find a way how to "escape" that (i.e. a backslash didn't work). Thus, single guillemets are used.
+. Check, if there are obvious errors by compiling the project (menu:Debug[Compile ‹project name›]).
+. Save the file/project.
+.. Be sure that the file/project you want to save is "`active`" in the VBE by checking, if its name is shown in VBE's title bar. +
+   (If it's not, open a (class) module of the corresponding project (and close it again).)
+.. Press the "`Save`" button (the disc symbol similar to 💾) in VBE's toolbar.
+.. Check that the file (really) was saved by having a look at the "`last modified date`" of the (project) file in the Windows File Explorer.
+====
+
+To have quick and easy access to the tool, you can add a button e.g. to the "`Quick Access Toolbar`".
+The main macro/sub to run is `ListAllSCEntriesInAllCharts` in the `modSeriesEntriesInCharts` module.
+As a symbol I usually use the pie chart icon (row 7, column 7).
+(If you don't know how to do this, please google it.
+There are plenty of resources on that topic including a lot of YouTube videos.)
+
+== Usage / Show it in action
+
+I tried to find a good Excel workbook with lots of charts that is publicly available.
+Unfortunately I wasn't successful.
+Please let know, if you can provide such a file or where to find one.
+
+But of course you can test it with your own Excel files.
+Simply hit the button which you (hopefully) have added to the Quick Access Toolbar (see the end of <<how-to-install>>).
+When the macro has finished you will find the worksheet `SeriesEntriesInCharts` in the active workbook.
+Have a look at it and see if you find the listed information useful.
+
+== Running Tests
+
+Yes, {uri-UnitTests}[Unit Tests] in Excel _are_ possible.
+For that you need to have the awesome {uri-rubberduck}[Rubberduck] AddIn installed (and enabled).
+
+But unfortunately for this (type of) project I don't have a clue what useful unit tests would be.
+If you know some, please let me know.
+
+[#used-by]
+== Used By
+
+I consider this project being an "`end product`".
+Thus it is very unlikely that it is used in other projects (as is).
+If you use it (modified) in another project and want to share it, please let me know and I'll be happy to list it here.
+
+== Known issues and limitations
+
+I almost exclusively work with scatter charts.
+So I am not sure if this works for all the other chart types as well.
+
+[#contributing]
+== Contributing
+
+All contributions are highly welcome!!
+
+If you are new to git/GitHub, please have a look at {uri-GitHub-FirstContribution} where you will find a lot of useful information for beginners.
+
+I recently was pointed to {uri-commit-messages} which sounds very promising.
+I'll use them from now on too (and hopefully don't forget it in a hurry).
+
+== FAQ
+
+[qanda]
+What are the `+'@...+` comments good for in the code?::
+You should really have a look at the awesome {uri-rubberduck}[Rubberduck] project!
+
+== License
+
+{uri-license}[MIT]
