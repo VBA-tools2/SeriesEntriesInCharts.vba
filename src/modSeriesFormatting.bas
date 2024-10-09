@@ -31,6 +31,9 @@ Private Type tAxisSettings
 End Type
 
 
+Private Const MarkerStyleNone As String = "none"
+
+
 Public Function AddSeriesMarkerFormatting( _
     ByVal wksSeriesLegend As Worksheet _
         ) As Boolean
@@ -152,11 +155,13 @@ Private Sub ShowSeriesFormattingCurrentChart( _
             Dim MarkerStyle As String
             MarkerStyle = GetMarkerStyle(srs)
             
-            Dim MarkerForegroundColor As Long
-            MarkerForegroundColor = GetMarkerForegroundColor(srs)
-            
-            Dim MarkerBackgroundColor As Long
-            MarkerBackgroundColor = GetMarkerBackgroundColor(srs)
+            If MarkerStyle <> MarkerStyleNone Then
+                Dim MarkerForegroundColor As Long
+                MarkerForegroundColor = GetMarkerForegroundColor(srs)
+                
+                Dim MarkerBackgroundColor As Long
+                MarkerBackgroundColor = GetMarkerBackgroundColor(srs)
+            End If
             
             WriteMarkerDataToSheet _
                     wksSeriesLegend.Cells(gciTitleRow + outSCTotal, iLastCol), _
@@ -211,7 +216,7 @@ Private Function GetMarkerStyle( _
             Case xlMarkerStyleDot
                 GetMarkerStyle = "dot"
             Case xlMarkerStyleNone
-                GetMarkerStyle = "none"
+                GetMarkerStyle = MarkerStyleNone
             Case xlMarkerStylePicture
                 GetMarkerStyle = "picture"
             Case xlMarkerStylePlus
@@ -370,7 +375,7 @@ Private Sub WriteMarkerDataToSheet( _
     With rng
         .Offset(, eMS.Style).Value2 = MarkerStyle
         
-        If MarkerStyle = "none" Then Exit Sub
+        If MarkerStyle = MarkerStyleNone Then Exit Sub
         
         With .Offset(, eMS.ForegroundColor)
             Select Case MarkerForegroundColor
