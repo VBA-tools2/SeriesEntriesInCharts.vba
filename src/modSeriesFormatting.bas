@@ -295,9 +295,22 @@ Private Function StoreXAxisSettings( _
             AxisSettings.MaxScale = .MaximumScale
         End If
         
+        'sometimes the `.TickLabels` property doesn't exist although the axis exists
+        'this most likely is a bug ...
+        On Error GoTo errNoTickLabelsOnSecondaryAxis
         AxisSettings.NumberFormat = .TickLabels.NumberFormat
         AxisSettings.NumberFormatLinked = .TickLabels.NumberFormatLinked
+        On Error GoTo 0
     End With
+    
+    If Err.Number <> 0 Then
+errNoTickLabelsOnSecondaryAxis:
+        Set ax = cha.Axes(xlCategory, xlPrimary)
+        With ax
+            AxisSettings.NumberFormat = .TickLabels.NumberFormat
+            AxisSettings.NumberFormatLinked = .TickLabels.NumberFormatLinked
+        End With
+    End If
     
     StoreXAxisSettings = AxisSettings
     
@@ -324,6 +337,9 @@ Private Sub RestoreXAxisSettings( _
             .MaximumScale = AxisSettings.MaxScale
         End If
         
+        'sometimes the `.TickLabels` property doesn't exist although the axis exists
+        'this most likely is a bug ...
+        On Error GoTo errNoTickLabelsOnSecondaryAxis
         If .TickLabels.NumberFormat <> AxisSettings.NumberFormat Then
             .TickLabels.NumberFormat = AxisSettings.NumberFormat
         End If
@@ -331,6 +347,19 @@ Private Sub RestoreXAxisSettings( _
             .TickLabels.NumberFormatLinked = AxisSettings.NumberFormatLinked
         End If
     End With
+    
+    If Err.Number <> 0 Then
+errNoTickLabelsOnSecondaryAxis:
+        Set ax = AxisSettings.cha.Axes(xlCategory, xlPrimary)
+        With ax
+            If .TickLabels.NumberFormat <> AxisSettings.NumberFormat Then
+                .TickLabels.NumberFormat = AxisSettings.NumberFormat
+            End If
+            If .TickLabels.NumberFormatLinked <> AxisSettings.NumberFormatLinked Then
+                .TickLabels.NumberFormatLinked = AxisSettings.NumberFormatLinked
+            End If
+       End With
+    End If
     
 End Sub
 
