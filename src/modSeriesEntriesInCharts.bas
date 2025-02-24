@@ -103,6 +103,7 @@ Public Sub ListAllSCEntriesInAllCharts()
         Call ApplyExtensions(wksSeriesLegend, bNewSeriesSheet, arrData)
         
         Call StuffToBeDoneLast(wksSeriesLegend, bNewSeriesSheet)
+        Call HideSeriesPathBookIfEmpty(wksSeriesLegend, arrData)
         
         If Not bNewSeriesSheet Then
             AFStorage.RestoreFilters
@@ -833,6 +834,33 @@ Private Function CountChartsWithoutSeriesInWorkbook( _
 End Function
 
 
+Private Sub HideSeriesPathBookIfEmpty( _
+    ByVal wksSeriesLegend As Worksheet, _
+    ByVal arrData As Variant _
+)
+    
+    Dim NoOfRows As Long
+    NoOfRows = UBound(arrData) - LBound(arrData) + 1
+    
+    Dim NoOfColumns As Long
+    NoOfColumns = eSD.SeriesNameBook - eSD.SeriesNamePath + 1
+    
+    Dim rng As Range
+    Set rng = wksSeriesLegend.Cells(gciTitleRow, 1).Offset(1).Resize(NoOfRows)
+    
+    Dim rng2 As Range
+    Set rng2 = rng.Offset(, eSD.SeriesNamePath - 1).Resize(, NoOfColumns)
+    If Application.WorksheetFunction.CountA(rng2) = 0 Then rng2.Columns.Hidden = True
+    
+    Set rng2 = rng.Offset(, eSD.SeriesXPath - 1).Resize(, NoOfColumns)
+    If Application.WorksheetFunction.CountA(rng2) = 0 Then rng2.Columns.Hidden = True
+    
+    Set rng2 = rng.Offset(, eSD.SeriesYPath - 1).Resize(, NoOfColumns)
+    If Application.WorksheetFunction.CountA(rng2) = 0 Then rng2.Columns.Hidden = True
+    
+End Sub
+
+
 Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
     ByVal wkb As Workbook _
 )
@@ -873,6 +901,7 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
         End With
         
         'add groups to some columns
+        'first level
         .Columns(eSD.ChartName).Group
         .Columns(eSD.Y2Label).Group
         .Columns(eSD.SeriesNamePath).Group
@@ -885,6 +914,13 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
         .Columns(eSD.SeriesYPath).Group
         .Columns(eSD.SeriesYBook).Group
         .Columns(eSD.SeriesYSheet).Group
+        'second level
+        .Columns(eSD.SeriesNamePath).Group
+        .Columns(eSD.SeriesNameBook).Group
+        .Columns(eSD.SeriesXPath).Group
+        .Columns(eSD.SeriesXBook).Group
+        .Columns(eSD.SeriesYPath).Group
+        .Columns(eSD.SeriesYBook).Group
         '----------------------------------------------------------------------
         
         'change style of title row
