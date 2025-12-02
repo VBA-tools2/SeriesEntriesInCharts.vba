@@ -418,3 +418,20 @@ Public Function IsChart( _
         End If
     End With
 End Function
+
+
+Private Function DoesNamedRangeExist( _
+    ByVal WorkbookOrWorksheet As Variant, _
+    ByVal NamedRangeName As String _
+        ) As Boolean
+    
+    DoesNamedRangeExist = False
+    
+    On Error Resume Next
+    Dim rng As Range
+    Set rng = WorkbookOrWorksheet.Range(NamedRangeName)
+    On Error GoTo 0
+    
+    DoesNamedRangeExist = (Not rng Is Nothing)
+    
+End Function

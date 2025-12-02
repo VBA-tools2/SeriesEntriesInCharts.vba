@@ -924,21 +924,7 @@ Private Sub CreateAndInitializeSeriesEntriesInChartsWorksheet( _
         '----------------------------------------------------------------------
         
         'change style of title row
-        With .Rows(gciTitleRow)
-            With .Interior
-                'background color
-                .Pattern = xlSolid
-                .PatternColorIndex = xlAutomatic
-                .ThemeColor = xlThemeColorAccent1
-                .TintAndShade = 0
-                .PatternTintAndShade = 0
-            End With
-            With .Font
-                'font color
-                .ThemeColor = xlThemeColorDark1
-                .TintAndShade = 0
-            End With
-        End With
+        Call ApplyTitleRowStyle(wks)
         
         'change page setup
         With .PageSetup
@@ -997,6 +983,43 @@ Private Function TransferHeadingNamesToArray() As Variant
     TransferHeadingNamesToArray = arrHeading
     
 End Function
+
+
+Private Sub ApplyTitleRowStyle( _
+    ByRef wks As Worksheet _
+)
+    
+    '==========================================================================
+    '(code) name of styles sheet
+    Const StylesSheetCodeName As String = "tblStyles"
+    'name of named range
+    Const DefinedNameOfTitleRowStyle As String = "style_accent1"
+    'URL where to find help in case of an error
+    Const HelpURL As String = _
+            "https://github.com/VBA-tools2/SeriesEntriesInCharts.vba#add-named-style-cells-as-reference"
+    '==========================================================================
+    
+    Dim wksStyles As Worksheet
+    If Not SetWksFromCodeName(ThisWorkbook, StylesSheetCodeName, wksStyles) Then GoTo errStylesSheetDoesntExist
+    If Not DoesNamedRangeExist(wksStyles, DefinedNameOfTitleRowStyle) Then GoTo errDefinedNameDoesntExist
+    
+    wks.Rows(gciTitleRow).Style = wksStyles.Range(DefinedNameOfTitleRowStyle).Style
+    
+    Exit Sub
+    
+errStylesSheetDoesntExist:
+    MsgBox "There is no worksheet with the (code) name '" & StylesSheetCodeName & _
+            "' in '" & ThisWorkbook.Name & "'." & _
+            vbNewLine & "Have a look at <" & HelpURL & ">."
+    Exit Sub
+    
+errDefinedNameDoesntExist:
+    MsgBox "There is no defined name '" & DefinedNameOfTitleRowStyle & _
+            "' on '[" & ThisWorkbook.Name & "]" & wksStyles.Name & " '." & _
+            vbNewLine & "Have a look at <" & HelpURL & ">."
+    Exit Sub
+    
+End Sub
 
 
 Private Sub AddHyperlinkToCurrentCell( _

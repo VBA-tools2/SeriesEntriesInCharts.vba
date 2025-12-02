@@ -2,11 +2,13 @@
 = SeriesEntriesInCharts.vba
 :experimental:
 :icons:         // not sure if this is needed
+:bindir: ../bin
 :sourcedir: ../src
 :testdir: ../tests
 :uri-ChartSeries: https://github.com/VBA-tools2/ChartSeries.vba
 :uri-commit-messages: https://www.conventionalcommits.org
 :uri-GitHub-FirstContribution: https://github.com/firstcontributions/first-contributions
+:uri-JKP-styles: https://jkp-ads.com/articles/styles.aspx#International_issues
 :uri-license: https://choosealicense.com/licenses/mit/
 :uri-modArraySupport2: https://github.com/VBA-tools2/modArraySupport2.vba
 :uri-rubberduck: https://rubberduckvba.com/
@@ -64,6 +66,8 @@ You also need the following classes/modules:
 [#how-to-install]
 == How to install / Getting started
 
+=== Adding modules/classes
+
 Add the CLS and BAS files from the link:{sourcedir}[src] folder to your project.
 (Of course you have to follow the installation instructions for the <<prerequisites>> as well.)
 Since you can use this tool for any workbook, it makes sense to put it in an AddIn.
@@ -90,6 +94,42 @@ Since you can use this tool for any workbook, it makes sense to put it in an Add
 .. Press the "`Save`" button (the disc symbol similar to 💾) in VBE's toolbar.
 .. Check that the file (really) was saved by having a look at the "`last modified date`" of the (project) file in the Windows File Explorer.
 ====
+
+=== Add "`named style cells`" as reference
+
+You need to have a worksheet with some named cells on it to reference some styles.
+(If you want to know _why_ this is needed "`so complicated`", have a look at {uri-JKP-styles}[Jan Karel Pieterse's article].)
+
+The requirement is to have a defined name `style_accent1` that references a cell on worksheet with the code name `tblStyles`.
+The referenced cell should be formatted with the "`Accent 1`" style (or whatever the equivalent name is in your language).
+
+._If you need some more advice on how to do that, expand me._
+[%collapsible]
+====
+. If your VBA project is an AddIn, make the worksheets visible.
+.. Open the Visual Basic Editor (VBE) (kbd:[Alt+F11]).
+.. Select `ThisWorkbook` from your VBE project.
+.. Change the property `IsAddin` value to `False`. +
+   (To show the properties window press the btn:[F4] button.)
+. Download an then open the file link:{bindir}/Style_template.xlsx[bin/Style_template.xlsx].
+. Copy the "`Styles`" worksheet to your VBA project.
+.. Right-click the "`Styles`" worksheet tab and select `Move or Copy`.
+.. Under `To book` select the workbook of your VBA project.
+.. Under `Before sheet`, select where you want to place the copy.
+.. Press the btn:[OK] button.
+. If your VBA project is an AddIn, make it an AddIn again.
+.. Open the Visual Basic Editor (VBE) (kbd:[Alt+F11]).
+.. Select `ThisWorkbook` from your VBE project.
+.. Change the property `IsAddin` value to `True`. +
+   (To show the properties window press the btn:[F4] button.)
+. Save the file/project.
+.. Be sure that the file/project you want to save is "`active`" in the VBE by checking, if its name is shown in VBE's title bar. +
+   (If it's not, open a (class) module of the corresponding project (and close it again).)
+.. Press the "`Save`" button (the disc symbol similar to 💾) in VBE's toolbar.
+.. Check that the file (really) was saved by having a look at the "`last modified date`" of the (project) file in the Windows File Explorer.
+====
+
+=== Add button to "`Quick Access Toolbar`"
 
 To have quick and easy access to the tool, you can add a button e.g. to the "`Quick Access Toolbar`".
 The main macro/sub to run is `ListAllSCEntriesInAllCharts` in the `modSeriesEntriesInCharts` module.

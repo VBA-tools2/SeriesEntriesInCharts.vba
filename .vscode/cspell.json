@@ -2,8 +2,11 @@
 {
     // ignoreWords - list of words that should be ignored
     "ignoreWords": [
+        "bindir",
         "COUNTA",
+        "doesnt",
         "ifdef",
+        "IsAddin",
         "qanda",
         "sourcedir",
         "testdir"
@@ -11,6 +14,8 @@
     // words - list of words to be always considered correct
     "words": [
         "guillemets",
+        "Karel",
+        "Pieterse",
         "rubberduck"
     ]
 }
